@@ -204,12 +204,11 @@ for(let i=0;i<60;i++){
 
 document.addEventListener("DOMContentLoaded", function () {
 var offset = 50;   //改成当前访问量
-
 var timer = setInterval(function () {
   var el = document.getElementById("busuanzi_value_page_pv"); // 改这里！
-    
   if (el && el.innerText && el.innerText != "0") {
     el.innerText = Math.max(0, parseInt(el.innerText) - offset);
+    console.log(el.innerText)
     clearInterval(timer);
   }
  }, 800);  
