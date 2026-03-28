@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阴极射线实验模拟</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .experiment-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            margin: 20px auto;
+            border: 2px solid #333;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        /* 真空管 */
+        .vacuum-tube {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 100px;
+            background-color: #222;
+            border-radius: 50px;
+            border: 2px solid #555;
+        }
+        
+        /* 阴极 */
+        .cathode {
+            position: absolute;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 40px;
+            background-color: #8B4513;
+            border-radius: 5px;
+        }
+        
+        .cathode-label {
+            position: absolute;
+            left: 40px;
+            top: calc(50% + 30px);
+            color: white;
+            font-size: 14px;
+        }
+        
+        /* 阳极 - 环形设计 */
+        .anode {
+            position: absolute;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 40px;
+            background: radial-gradient(circle, #C0C0C0 0%, #A0A0A0 70%, #808080 100%);
+            border-radius: 50%;
+            border: 2px solid #606060;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5), 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .anode-label {
+            position: absolute;
+            right: 40px;
+            top: calc(50% + 30px);
+            color: white;
+            font-size: 14px;
+        }
+        
+        /* 阴极射线 */
+        .ray {
+            position: absolute;
+            top: 50%;
+            left: 70px;
+            height: 2px;
+            width: 660px;
+            background: linear-gradient(to right, 
+                rgba(0, 255, 255, 0.8), 
+                rgba(173, 216, 230, 0.6), 
+                rgba(0, 255, 255, 0.8));
+            transform-origin: left center;
+            transform: translateY(-50%);
+        }
+        
+        /* 电场区域内的射线偏转 */
+        .ray-deflected {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(to right, 
+                rgba(255, 100, 100, 0.9), 
+                rgba(255, 200, 100, 0.7), 
+                rgba(255, 100, 100, 0.9));
+        }
+        
+        /* 粒子 */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #00FFFF;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF;
+            z-index: 10;
+            top: 246px;
+            left: 70px;
+        }
+        
+        /* 电场板 */
+        .field-plates {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 80px;
+        }
+        
+        .upper-plate {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            width: 200px;
+            height: 10px;
+            background-color: #FFD700;
+        }
+        
+        .lower-plate {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            width: 200px;
+            height: 10px;
+            background-color: #FFD700;
+        }
+        
+        .upper-plate-label {
+            position: absolute;
+            top: -50px;
+            left: 90px;
+            color: yellow;
+            font-size: 12px;
+        }
+        
+        .lower-plate-label {
+            position: absolute;
+            bottom: -50px;
+            left: 90px;
+            color: yellow;
+            font-size: 12px;
+        }
+        
+
+        
+        /* 电场线 */
+        .electric-field-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 确保不影响交互 */
+        }
+        
+        .electric-field-line {
+            position: absolute;
+            width: 2px; /* 线的宽度 */
+            background: linear-gradient(to bottom, transparent, #00AAFF, #0088FF, #00AAFF, transparent);
+            height: 100%;
+        }
+        
+        /* 知识检测按钮 */
+        .knowledge-check {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .knowledge-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .knowledge-btn:hover {
+            background-color: #45a049;
+        }
+        
+        /* 知识检测弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 60%;
+            max-width: 600px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .question {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .options {
+            margin: 10px 0;
+        }
+        
+        .option {
+            display: block;
+            margin: 8px 0;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .option:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .submit-btn:hover {
+            background-color: #1976D2;
+        }
+        
+        /* 题目幻灯片样式 */
+        .question-slide {
+            display: none;
+            height: 100%;
+        }
+        
+        .question-slide.active {
+            display: block;
+        }
+        
+        .nav-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .nav-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        .next-btn {
+            background-color: #28a745;
+        }
+        
+        .next-btn:hover {
+            background-color: #218838;
+        }
+        
+        .prev-btn {
+            background-color: #007bff;
+        }
+        
+        .prev-btn:hover {
+            background-color: #0069d9;
+        }
+        
+        /* 荧光屏 */
+        .fluorescent-screen {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 80px;
+            background-color: #00FF00;
+        }
+        
+        .screen-label {
+            position: absolute;
+            right: 20px;
+            top: calc(50% + 50px);
+            color: lime;
+            font-size: 14px;
+        }
+        
+        /* 控制面板 */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .control-group {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 200px;
+        }
+        
+        .control-group h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .slider-container {
+            margin: 10px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .value-display {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+            color: #333;
+        }
+        
+        /* 说明文字 */
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            line-height: 1.6;
+        }
+        
+        .explanation h2 {
+            color: #333;
+        }
+        
+        .highlight {
+            background-color: yellow;
+            color: black;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+<!-- ===== 导航栏开始 ===== -->
+<div id="top-nav" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(135deg, #1a237e, #283593);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+">
+    <button onclick="location.href='../index.html'" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">🏠 主页</button>
+
+    <button onclick="history.back()" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">⬅ 返回上级</button>
+</div>
+<div style="height: 60px;"></div>
+<!-- ===== 导航栏结束 ===== -->
+
+    <div class="container">
+        <h1>阴极射线实验模拟</h1>
+        
+        <div class="experiment-container">
+            <!-- 真空管 -->
+            <div class="vacuum-tube"></div>
+            
+            <!-- 阴极 -->
+            <div class="cathode"></div>
+            <div class="cathode-label">阴极(K)</div>
+            
+            <!-- 阳极 -->
+            <div class="anode"></div>
+            <div class="anode-label" style="left: 190px;">阳极(A)</div>
+            
+
+            <!-- 粒子 -->
+            <div class="particle" id="electron"></div>
+            
+            <!-- 电场板 -->
+            <div class="field-plates">
+                <div class="upper-plate" id="upperPlate"></div>
+                <div class="lower-plate" id="lowerPlate"></div>
+                <div class="upper-plate-label">上极板(+) </div>
+                <div class="lower-plate-label">下极板(-) </div>
+                <!-- 电场线 -->
+                <div class="electric-field-lines" id="electricFieldLines"></div>
+            </div>
+            
+
+            
+            <!-- 荧光屏 -->
+            <div class="fluorescent-screen"></div>
+            <div class="screen-label">荧光屏</div>
+        </div>
+        
+        <!-- 控制面板 -->
+        <div class="controls">
+            <div class="control-group">
+                <h3>电场控制</h3>
+                <div class="slider-container">
+                    <label for="electricField">电场强度: <span id="electricFieldValue" class="value-display">0</span>V/m (范围:-80到80V/m)</label>
+                    <input type="range" id="electricField" min="-80" max="80" value="0" step="0.1">
+                </div>
+            </div>
+            
+
+            
+            <div class="control-group">
+                <h3>加速电压</h3>
+                <div class="slider-container">
+                    <label for="accelerationVoltage">电压: <span id="voltageValue" class="value-display">0</span>kV</label>
+                    <input type="range" id="accelerationVoltage" min="0" max="100" value="50">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实验说明 -->
+        <div class="explanation">
+            <h2>阴极射线实验原理</h2>
+            <p><strong>阴极射线</strong>是在真空管中由阴极发射的高速电子流，这一现象最早由德国物理学家普吕克尔在1858年发现。</p>
+            
+            <p><strong>实验现象：</strong>当在阴极和阳极之间加上高电压时，阴极会发射出一种射线，这种射线会使玻璃管壁发出荧光，并沿直线传播，遇到障碍物会形成阴影。</p>
+            
+            <p><strong>科学验证：</strong>英国物理学家汤姆孙通过实验验证了阴极射线是带负电的粒子流（电子），而不是电磁波。他通过观察阴极射线在电场和磁场中的偏转情况证明了这一点。</p>
+            
+            <p><strong>偏转规律：</strong>
+            <ul>
+                <li>在<strong>电场</strong>中，阴极射线向正极板偏转（因为电子带负电）</li>
+                <li>在<strong>磁场</strong>中，阴极射线受洛伦兹力作用发生偏转，方向可用左手定则判断</li>
+            </ul>
+            </p>
+            
+            <p><strong>重要公式：</strong>
+            <ul>
+                <li>电场偏转：偏转距离与电场强度E成正比</li>
+                <li>比荷测定：q/m = E/(Br²) (通过电场和磁场的组合测量)</li>
+                <li>实际实验中电场强度：~10⁴ V/m</li>
+                <li>阴极射线带负电(电子流)，电场力F=qE方向与电场E方向相反</li>
+                <li>电场方向可变：正值表示电场向上，负值表示电场向下，电子受力方向始终与电场方向相反</li>
+            </ul>
+            </p>
+            
+            <p><strong>重要意义：</strong>汤姆孙通过测量阴极射线的比荷（电荷与质量之比），发现了电子的存在，这是人类发现的第一个基本粒子，标志着人类对原子结构的认识迈出了重要一步。</p>
+        </div>
+        
+        <!-- 知识检测按钮 -->
+        <div class="knowledge-check">
+            <button id="knowledgeCheckBtn" class="knowledge-btn">知识检测</button>
+        </div>
+        
+        <!-- 实验操作指导 -->
+        <div class="explanation">
+            <h2>实验操作指南</h2>
+            <ol>
+                <li><strong>观察基本现象</strong>：保持电场强度为0，观察阴极射线沿直线传播的现象</li>
+                <li><strong>电场偏转实验(正向)</strong>：将电场强度调至约50，观察射线向下偏转（因为电子带负电，受向上电场的向下力）</li>
+                <li><strong>电场偏转实验(反向)</strong>：将电场强度调至约-50，观察射线向上偏转（因为电子带负电，受向下电场的向上力）</li>
+            </ol>
+        </div>
+        
+        <!-- 知识检测弹窗 -->
+        <div id="knowledgeModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>阴极射线实验知识检测</h2>
+                <div id="quizContainer">
+                    <div class="question-slide active">
+                        <div class="question">
+                            <p><strong>1. 阴极射线是由什么组成的？</strong></p>
+                            <div class="options">
+                                <label class="option"><input type="radio" name="q1" value="A">A. 质子</label>
+                                <label class="option"><input type="radio" name="q1" value="B">B. 中子</label>
+                                <label class="option"><input type="radio" name="q1" value="C">C. 电子</label>
+                                <label class="option"><input type="radio" name="q1" value="D">D. α粒子</label>
+                            </div>
+                        </div>
+                        <div class="nav-buttons">
+                            <button class="nav-btn next-btn" id="next1">下一题 &gt;</button>
+                        </div>
+                    </div>
+                    
+                    <div class="question-slide">
+                        <div class="question">
+                            <p><strong>2. 当阴极射线（电子流）在向上指向的电场中运动时，其偏转方向如何？</strong></p>
+                            <div class="options">
+                                <label class="option"><input type="radio" name="q2" value="A">A. 向上偏转</label>
+                                <label class="option"><input type="radio" name="q2" value="B">B. 向下偏转</label>
+                                <label class="option"><input type="radio" name="q2" value="C">C. 不偏转</label>
+                                <label class="option"><input type="radio" name="q2" value="D">D. 向左偏转</label>
+                            </div>
+                        </div>
+                        <div class="nav-buttons">
+                            <button class="nav-btn prev-btn" id="prev2">&lt; 上一题</button>
+                            <button class="nav-btn next-btn" id="next2">下一题 &gt;</button>
+                        </div>
+                    </div>
+                    
+                    <div class="question-slide">
+                        <div class="question">
+                            <p><strong>3. 汤姆孙通过研究阴极射线发现了什么？</strong></p>
+                            <div class="options">
+                                <label class="option"><input type="radio" name="q3" value="A">A. 原子核</label>
+                                <label class="option"><input type="radio" name="q3" value="B">B. 质子</label>
+                                <label class="option"><input type="radio" name="q3" value="C">C. 电子</label>
+                                <label class="option"><input type="radio" name="q3" value="D">D. 中子</label>
+                            </div>
+                        </div>
+                        <div class="nav-buttons">
+                            <button class="nav-btn prev-btn" id="prev3">&lt; 上一题</button>
+                            <button class="submit-btn" id="submitQuiz">提交答案</button>
+                        </div>
+                    </div>
+                    
+                    <div class="result-slide" id="resultSlide" style="display:none;">
+                        <h3>你的得分: <span id="finalScore"></span></h3>
+                        <div id="resultDetails"></div>
+                        <div id="learningAnalysis"></div>
+                        <button class="nav-btn" id="restartQuiz">重新测试</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 获取DOM元素
+        const electron = document.getElementById('electron');
+        const electricFieldSlider = document.getElementById('electricField');
+        const accelerationVoltageSlider = document.getElementById('accelerationVoltage');
+        const electricFieldValue = document.getElementById('electricFieldValue');
+        const voltageValue = document.getElementById('voltageValue');
+        const upperPlate = document.getElementById('upperPlate');
+        const lowerPlate = document.getElementById('lowerPlate');
+        const electricFieldLines = document.getElementById('electricFieldLines');
+        
+        // 电场/磁场区域位置
+        const plateStartX = 230;  // 电场/磁场区域起始位置
+        const plateEndX = 430;    // 电场/磁场区域结束位置
+        
+        // 荧光屏位置
+        const screenPosition = 630;  // 荧光屏位置
+        
+        // 粒子初始位置
+        let particleX = 70;  // 初始X坐标
+        let particleY = 250; // 初始Y坐标 (容器高度的一半)
+        let particleSpeed = 1.5; // 粒子移动速度，减小X方向速度以平衡Y方向偏转
+        
+        // 粒子运动参数
+        let velocityX = particleSpeed;  // X方向速度
+        let velocityY = 0;              // Y方向速度
+        let accelerationY = 0;          // Y方向加速度
+        
+        // 更新显示值
+        function updateValues() {
+            // 显示实际的电场强度值 (V/m)
+            const actualElectricField = electricFieldSlider.value * 10; // 滑块值转换为实际电场强度
+            electricFieldValue.textContent = actualElectricField.toFixed(0);
+            voltageValue.textContent = accelerationVoltageSlider.value;
+            
+            // 根据电场强度调整射线偏转
+            const electricField = parseInt(electricFieldSlider.value);
+            const voltage = parseInt(accelerationVoltageSlider.value);
+            
+            // 根据物理公式计算偏转
+            // 电场偏转：y = (qEL/mv²)(L/2 + D)，其中v是电子速度
+            
+            // 简化的物理模型
+            const electronCharge = 1.6e-19; // 电子电荷
+            const electronMass = 9.1e-31;  // 电子质量
+            
+            // 假设加速电压与电子速度的关系: v ∝ sqrt(V_accel)
+            const baseVelocity = Math.sqrt(voltage) * 1e6; // 简化模型
+            
+            let deflectionAngle = 0;
+            let deflectionY = 0;
+            let showDeflection = false;
+            
+            if (voltage > 0) {
+                if (Math.abs(electricField) > 0) {
+                    // 仅电场偏转：电子受力方向与电场方向相反（因负电荷）
+                    // F = qE, a = qE/m, 偏转角度与电场强度成正比
+                    deflectionAngle = -electricField * 0.05; // 减小角度偏转
+                    deflectionY = -electricField * 0.4; // 减小垂直偏移量
+                    showDeflection = true;
+                } else {
+                    // 没有电场时，射线直线传播
+                    deflectionAngle = 0;
+                    deflectionY = 0;
+                    showDeflection = false;
+                }
+            }
+            
+
+            
+            // 根据电场强度调整极板颜色和亮度
+            if (electricField > 0) {
+                upperPlate.style.backgroundColor = '#FFA500'; // 橙色表示带电
+                lowerPlate.style.backgroundColor = '#ADD8E6'; // 淡蓝色表示带电
+            } else {
+                upperPlate.style.backgroundColor = '#FFD700'; // 金色
+                lowerPlate.style.backgroundColor = '#FFD700'; // 金色
+            }
+            
+            // 更新电场线
+            drawElectricFieldLines(electricField);
+        }
+        
+        // 绘制电场线
+        function drawElectricFieldLines(strength) {
+            // 清空现有的电场线
+            electricFieldLines.innerHTML = '';
+            
+            // 只有当电场强度不为0时才显示电场线
+            if (strength !== 0) {
+                // 计算需要多少条电场线
+                const numLines = 10; // 固定数量的电场线
+                
+                // 确定电场线的位置范围（在极板之间）
+                const startX = 230; // 极板起始X坐标
+                const endX = 430;   // 极板结束X坐标
+                const startY = 170; // 上极板Y坐标
+                const endY = 330;   // 下极板Y坐标
+                
+                // 根据电场强度的正负确定电场线方向
+                const direction = strength > 0 ? 1 : -1; // 正值表示电场向上，负值表示电场向下
+                
+                // 创建多条电场线
+                for (let i = 0; i < numLines; i++) {
+                    const line = document.createElement('div');
+                    line.className = 'electric-field-line';
+                    
+                    // 设置电场线的水平位置
+                    const xPosition = startX + (i / (numLines - 1)) * (endX - startX);
+                    line.style.left = `${xPosition}px`;
+                    
+                    // 设置电场线的高度和垂直位置
+                    line.style.height = `${endY - startY}px`;
+                    line.style.top = `${startY}px`;
+                    
+                    // 根据电场强度调整透明度
+                    const opacity = Math.min(Math.abs(strength) / 80, 1); // 强度越大，越明显
+                    line.style.opacity = opacity;
+                    
+                    // 添加箭头指示电场方向
+                    if (direction > 0) {
+                        // 电场向上：添加向上的箭头
+                        line.style.background = 'linear-gradient(to top, transparent, #00AAFF, #0088FF, #00AAFF, transparent)';
+                    } else {
+                        // 电场向下：添加向下的箭头
+                        line.style.background = 'linear-gradient(to bottom, transparent, #00AAFF, #0088FF, #00AAFF, transparent)';
+                    }
+                    
+                    electricFieldLines.appendChild(line);
+                }
+            }
+        }
+        
+        // 添加事件监听器
+        electricFieldSlider.addEventListener('input', updateValues);
+        accelerationVoltageSlider.addEventListener('input', updateValues);
+        
+        // 初始化
+        updateValues();
+        
+        // 初始化粒子位置
+        function initParticle() {
+            electron.style.left = `${particleX}px`;
+            electron.style.top = `${particleY}px`;
+            
+            // 重置运动参数
+            velocityX = particleSpeed;
+            velocityY = 0;
+            accelerationY = 0;
+        }
+        
+        // 添加动画效果
+        function animateRay() {
+
+            
+            // 更新粒子位置
+            updateParticle();
+            
+            requestAnimationFrame(animateRay);
+        }
+        
+        // 更新粒子位置
+        function updateParticle() {
+            // 获取当前场强值
+            const electricField = parseInt(electricFieldSlider.value);
+            const voltage = parseInt(accelerationVoltageSlider.value);
+            
+            if (voltage <= 0) {
+                // 如果没有加速电压，粒子不运动
+                return;
+            }
+            
+            // 只有当粒子进入电场区域时才受力
+            accelerationY = 0;
+            if (particleX >= plateStartX && particleX <= plateEndX) {
+                // 物理常数
+                const electronCharge = -1.6e-19; // 电子电荷 (库仑)
+                const electronMass = 9.1e-31;    // 电子质量 (千克)
+                
+                // 计算电场力 (F = qE)
+                // 电场方向根据滑块值变化，向上为正，向下为负
+                // 电子带负电，所以电场力方向与电场方向相反
+                const actualElectricField = electricField * 10; // 实际电场强度，降低缩放因子
+                const electricForceY = electronCharge * actualElectricField; // 电场力在Y方向
+                
+                // 根据牛顿第二定律 F = ma => a = F/m
+                accelerationY = electricForceY / electronMass; // Y方向加速度
+                
+                // 时间步长因子，模拟连续运动而非离散跳跃
+                const timeStepFactor = 1e-16; // 模拟非常小的时间步长
+                
+                // 更新速度
+                velocityY += accelerationY * timeStepFactor;
+                
+                // 限制速度范围（防止过大）
+                velocityY = Math.max(Math.min(velocityY, 1), -1); // 减小Y方向速度限制
+            }
+            
+            // 更新位置
+            particleX += velocityX;
+            particleY += velocityY;
+            
+            // 检查边界
+            if (particleX > 750) { // 超出容器边界
+                // 重置粒子到初始位置
+                particleX = 70;
+                particleY = 250;
+                velocityX = particleSpeed; // 重置为初始速度
+                velocityY = 0;
+            }
+            
+            // 更新粒子显示位置
+            electron.style.left = `${particleX}px`;
+            electron.style.top = `${particleY}px`;
+            
+
+        }
+        
+        // 初始化粒子
+        initParticle();
+        
+        animateRay(); // 启动动画
+        
+        // 知识检测功能
+        const knowledgeCheckBtn = document.getElementById('knowledgeCheckBtn');
+        const knowledgeModal = document.getElementById('knowledgeModal');
+        const closeBtn = document.querySelector('.close');
+        const submitQuizBtn = document.getElementById('submitQuiz');
+        
+        // 打开知识检测弹窗
+        knowledgeCheckBtn.addEventListener('click', function() {
+            knowledgeModal.style.display = 'block';
+            showSlide(currentSlide);
+        });
+        
+        // 关闭弹窗
+        closeBtn.addEventListener('click', function() {
+            knowledgeModal.style.display = 'none';
+            resetQuiz();
+        });
+
+        // 点击弹窗外部关闭
+        window.addEventListener('click', function(event) {
+            if (event.target === knowledgeModal) {
+                knowledgeModal.style.display = 'none';
+                resetQuiz();
+            }
+        });
+
+        // 滑动功能
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.question-slide');
+        
+        function showSlide(n) {
+            // 隐藏所有幻灯片
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            // 显示当前幻灯片
+            currentSlide = n;
+            if (currentSlide >= slides.length) {
+                currentSlide = slides.length - 1;
+            }
+            if (currentSlide < 0) {
+                currentSlide = 0;
+            }
+            slides[currentSlide].classList.add('active');
+        }
+        
+        // 导航按钮事件
+        document.getElementById('next1').addEventListener('click', () => showSlide(1));
+        document.getElementById('prev2').addEventListener('click', () => showSlide(0));
+        document.getElementById('next2').addEventListener('click', () => showSlide(2));
+        document.getElementById('prev3').addEventListener('click', () => showSlide(1));
+        
+        // 提交测验
+        submitQuizBtn.addEventListener('click', function() {
+            const answers = {
+                q1: 'C', // 正确答案是C: 电子
+                q2: 'B', // 正确答案是B: 向下偏转
+                q3: 'C'  // 正确答案是C: 电子
+            };
+            
+            let score = 0;
+            const totalQuestions = Object.keys(answers).length;
+            
+            // 检查每个问题的答案
+            for (const question in answers) {
+                const selectedOption = document.querySelector(`input[name="${question}"]:checked`);
+                if (selectedOption && selectedOption.value === answers[question]) {
+                    score++;
+                }
+            }
+            
+            // 显示结果页面
+            document.querySelectorAll('.question-slide').forEach(slide => slide.style.display = 'none');
+            document.getElementById('resultSlide').style.display = 'block';
+            
+            // 显示得分
+            document.getElementById('finalScore').textContent = `${score}/${totalQuestions}`;
+            
+            // 生成详细结果
+            let resultDetails = '<ul>';
+            for (const question in answers) {
+                const selectedOption = document.querySelector(`input[name="${question}"]:checked`);
+                const userAnswer = selectedOption ? selectedOption.value : '未作答';
+                const isCorrect = selectedOption && selectedOption.value === answers[question];
+                
+                resultDetails += `<li>问题 ${(parseInt(question.charAt(1)))}: ${userAnswer} ${isCorrect ? '✓' : '✗ (正确答案: ' + answers[question] + ')'}</li>`;
+            }
+            resultDetails += '</ul>';
+            document.getElementById('resultDetails').innerHTML = resultDetails;
+            
+            // 生成学情分析和建议
+            generateLearningAnalysis(score, totalQuestions);
+        });
+
+        // 生成学情分析和建议
+        function generateLearningAnalysis(score, total) {
+            const analysisDiv = document.getElementById('learningAnalysis');
+            const percentage = (score / total) * 100;
+            
+            let analysis = '<h4>学情分析</h4><ul>';
+            
+            if (percentage === 100) {
+                analysis += '<li style="color: green;">优秀！您对阴极射线实验有深入的理解。</li>';
+                analysis += '<li>建议：您可以尝试更深入的研究，如考虑磁场对阴极射线的影响。</li>';
+            } else if (percentage >= 67) {
+                analysis += '<li style="color: #ffc107;">良好！您基本掌握了阴极射线实验的核心概念。</li>';
+                analysis += '<li>建议：回顾一下错误的题目，加深对电子性质和电场作用的理解。</li>';
+            } else if (percentage >= 34) {
+                analysis += '<li style="color: orange;">一般！您对阴极射线实验有一定了解，但还需要加强。</li>';
+                analysis += '<li>建议：重点复习电子的基本性质和电场对带电粒子的作用机制。</li>';
+            } else {
+                analysis += '<li style="color: red;">需要加强！您对阴极射线实验的理解有待提高。</li>';
+                analysis += '<li>建议：重新学习阴极射线实验的基础知识，重点关注汤姆孙的发现及其意义。</li>';
+            }
+            
+            analysis += '<li>提醒：阴极射线（电子流）带负电，在电场中受力方向与电场方向相反。</li>';
+            analysis += '</ul>';
+            
+            analysisDiv.innerHTML = analysis;
+        }
+
+        // 重新开始测验
+        document.getElementById('restartQuiz').addEventListener('click', function() {
+            resetQuiz();
+            showSlide(0); // 回到第一题
+        });
+
+        // 重置测验
+        function resetQuiz() {
+            // 清除所有选择
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            // 隐藏结果页面，显示第一题
+            document.getElementById('resultSlide').style.display = 'none';
+            
+            // 重置幻灯片显示
+            document.querySelectorAll('.question-slide').forEach((slide, index) => {
+                if (index === 0) {
+                    slide.style.display = 'block';
+                } else {
+                    slide.style.display = 'none';
+                }
+            });
+            
+            // 移除所有高亮样式
+            document.querySelectorAll('.option').forEach(label => {
+                label.style.backgroundColor = '';
+                label.style.border = '';
+            });
+            
+            currentSlide = 0;
+        }
+    </script>
+</body>
+</html>
