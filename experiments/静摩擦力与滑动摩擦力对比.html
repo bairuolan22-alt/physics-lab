@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>静摩擦力 vs 滑动摩擦力 · 自动扫描模式</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #17212b;
+            font-family: 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            background: #0d1c29;
+            border-radius: 40px;
+            padding: 24px 24px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+            border: 1px solid #2a4b6e;
+        }
+        /* 标题 */
+        .title {
+            font-size: 2.2rem;
+            font-weight: 500;
+            color: #e3f0ff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .title span {
+            background: #264f73;
+            font-size: 1rem;
+            padding: 6px 18px;
+            border-radius: 40px;
+            color: #c0dcff;
+        }
+        /* 两列布局: 左(控制+动画) 右(数据+曲线) */
+        .main-row {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+        .left-col {
+            flex: 2 1 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        .right-col {
+            flex: 1 2 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        /* 控制面板卡片 */
+        .panel {
+            background: #122b3f;
+            border-radius: 36px;
+            padding: 22px 24px;
+            border: 1px solid #28537b;
+            box-shadow: inset 0 2px 5px #030f1a;
+        }
+        .ctrl-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: flex-end;
+        }
+        .slider-group {
+            flex: 1 1 160px;
+        }
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #cde2ff;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .slider-group label span {
+            background: #1d405d;
+            padding: 3px 14px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 8px;
+            background: #203f59;
+            border-radius: 20px;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: #6bb0ff;
+            border-radius: 50%;
+            border: 2px solid #d2e6ff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px black;
+            margin-top: -7px;
+        }
+        input[type=range]:disabled {
+            opacity: 0.7;
+        }
+        input[type=range]:disabled::-webkit-slider-thumb {
+            background: #3a5f7a;
+            border-color: #8aa9cc;
+            cursor: default;
+        }
+        .info-text {
+            background: #0f2b40;
+            border-radius: 40px;
+            padding: 10px 20px;
+            color: #b9d9ff;
+            font-size: 0.95rem;
+            border: 1px solid #3570a0;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .action-buttons button {
+            background: #2a5277;
+            border: none;
+            color: white;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            font-size: 1.1rem;
+            border: 1px solid #4c7faf;
+            box-shadow: 0 5px 0 #0b1f2f;
+        }
+        .action-buttons button:hover {
+            background: #3c6b99;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 #0b1f2f;
+        }
+        /* 动画区 */
+        .anim-canvas {
+            background: #0f1f30;
+            border-radius: 36px;
+            padding: 20px 20px 15px;
+            border: 1px solid #2b5279;
+        }
+        #animCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #091623;
+            border-radius: 28px;
+            border: 1px solid #31618b;
+            margin-bottom: 8px;
+        }
+        /* 右侧数据卡片 */
+        .data-panel {
+            background: #10273c;
+            border-radius: 36px;
+            padding: 22px 18px;
+            border: 1px solid #285782;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            background: #0b1f31;
+            padding: 12px 18px;
+            border-radius: 34px;
+            margin: 12px 0;
+            color: #d0e6ff;
+            font-size: 1.1rem;
+            border: 1px solid #255177;
+        }
+        .data-row .value {
+            font-family: 'JetBrains Mono', monospace;
+            background: #031524;
+            padding: 3px 16px;
+            border-radius: 36px;
+            color: #a7ceff;
+        }
+        .mini-chart {
+            background: #0c2339;
+            border-radius: 28px;
+            padding: 16px 14px 12px;
+            border: 1px solid #2e5d89;
+            margin-top: 18px;
+        }
+        .mini-chart h4 {
+            color: #cbe2ff;
+            font-weight: 400;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+        }
+        .legend span {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+        #curveCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #0a1c2d;
+            border-radius: 20px;
+            border: 1px solid #2d6090;
+        }
+        /* 底部结论 */
+        .conclusion {
+            margin-top: 28px;
+            background: #123653;
+            border-radius: 60px;
+            padding: 18px 30px;
+            color: #dcedff;
+            border: 1px solid #3073aa;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+        }
+        .conclusion div {
+            background: #1e4b70;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 1rem;
+        }
+        hr {
+            border: 0.5px solid #2b5780;
+            margin: 12px 0;
+        }
+    </style>
+</head>
+<body>
+<!-- ===== 导航栏开始 ===== -->
+<div id="top-nav" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(135deg, #1a237e, #283593);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+">
+    <button onclick="location.href='../index.html'" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">🏠 主页</button>
+
+    <button onclick="history.back()" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">⬅ 返回上级</button>
+</div>
+<div style="height: 60px;"></div>
+<!-- ===== 导航栏结束 ===== -->
+
+<div class="container">
+    <div class="title">
+        🧱 静摩擦力 vs 滑动摩擦力 · 自动扫描模式
+        <span>f = μN 验证</span>
+    </div>
+
+    <!-- 主内容区两列 -->
+    <div class="main-row">
+        <!-- 左列：控制+动画 -->
+        <div class="left-col">
+            <!-- 控制面板 -->
+            <div class="panel">
+                <div class="ctrl-row">
+                    <div class="slider-group">
+                        <label>📌 拉力 F (自动) <span id="forceVal">0.00 N</span></label>
+                        <input type="range" id="forceSlider" min="0" max="20" value="0" step="0.05" disabled>
+                    </div>
+                    <div class="slider-group">
+                        <label>⚖️ 压力 N <span id="pressureVal">10.0 N</span></label>
+                        <input type="range" id="pressureSlider" min="2" max="20" value="10" step="0.5">
+                    </div>
+                    <div class="slider-group">
+                        <label>🌀 粗糙程度 μ <span id="muVal">0.40</span></label>
+                        <input type="range" id="muSlider" min="0.2" max="1.0" value="0.4" step="0.02">
+                    </div>
+                </div>
+                <div class="info-text">
+                    ⏳ 拉力自动 0 → 20 N 循环扫描 · 观察完整曲线
+                </div>
+                <div class="action-buttons">
+                    <button id="resetBtn">↺ 重置木块</button>
+                </div>
+            </div>
+
+            <!-- 动画区 -->
+            <div class="anim-canvas">
+                <canvas id="animCanvas" width="580" height="240"></canvas>
+                <div style="display: flex; justify-content: space-between; color:#9ac2e5; padding:0 16px;">
+                    <span>弹簧测力计</span>
+                    <span>木块</span>
+                    <span>水平面</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右列：数据 + 曲线 -->
+        <div class="right-col">
+            <div class="data-panel">
+                <div class="data-row"><span>📊 静摩擦力 (当前)</span><span class="value" id="staticFriction">0.00 N</span></div>
+                <div class="data-row"><span>📉 滑动摩擦力 (μN)</span><span class="value" id="slidingFriction">4.00 N</span></div>
+                <div class="data-row"><span>⚠️ 最大静摩擦力</span><span class="value" id="maxStaticFriction">4.80 N</span></div>
+                <hr>
+                <div style="color:#b3d6ff; font-size:0.9rem; display:flex; gap:16px;">
+                    <span>🟡 静摩擦段: 45°线</span>
+                    <span>🔵 滑动摩擦: 水平线</span>
+                    <span>⚪ 垂直虚线: 突变</span>
+                </div>
+            </div>
+
+            <!-- 曲线区 摩擦力–拉力 (连贯折线) -->
+            <div class="mini-chart">
+                <h4>📈 摩擦力–拉力曲线 <span class="legend"><span style="background:#cccccc;"></span>理论</span> <span class="legend"><span style="background:#ff6666;"></span>当前点</span></h4>
+                <canvas id="curveCanvas" width="340" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部固定结论 -->
+    <div class="conclusion">
+        <div>1️⃣ 静摩擦力大小等于外力，方向相反，有最大值。</div>
+        <div>2️⃣ 滑动摩擦力略小于最大静摩擦力。</div>
+        <div>3️⃣ 滑动摩擦力只与压力和接触面粗糙程度有关。</div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ----- 物理参数 -----
+    const m = 1.0;               // 质量 1kg
+    let N = 10.0;                // 正压力 (N)
+    let mu = 0.4;                // 滑动摩擦系数
+    const muStaticFactor = 1.2;   // 最大静摩擦系数 = mu * 1.2
+
+    // 状态变量
+    let force = 0.0;              // 当前拉力 (N)
+    let velocity = 0.0;
+    let posMeter = 0.5;           // 起始0.5米处
+    const posMin = 0.0, posMax = 4.0;
+    const FORCE_MAX = 20.0;
+
+    // 自动模式 (固定为自动)
+    let autoForce = 0.0;
+    const FORCE_STEP = 0.03;
+
+    // 摩擦力结果
+    let currentFriction = 0.0;
+    let isMoving = false;
+
+    // DOM 元素
+    const forceSlider = document.getElementById('forceSlider');
+    const forceVal = document.getElementById('forceVal');
+    const pressureSlider = document.getElementById('pressureSlider');
+    const pressureVal = document.getElementById('pressureVal');
+    const muSlider = document.getElementById('muSlider');
+    const muVal = document.getElementById('muVal');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const staticSpan = document.getElementById('staticFriction');
+    const slidingSpan = document.getElementById('slidingFriction');
+    const maxStaticSpan = document.getElementById('maxStaticFriction');
+
+    const animCanvas = document.getElementById('animCanvas');
+    const ctxAnim = animCanvas.getContext('2d');
+    const curveCanvas = document.getElementById('curveCanvas');
+    const ctxCurve = curveCanvas.getContext('2d');
+
+    // 辅助更新显示
+    function updateSliderReadouts() {
+        forceVal.innerText = force.toFixed(2) + ' N';
+        pressureVal.innerText = N.toFixed(1) + ' N';
+        muVal.innerText = mu.toFixed(2);
+    }
+
+    // 计算最大静摩擦 & 滑动摩擦
+    function calcFrictions() {
+        const sliding = mu * N;
+        const maxStatic = mu * muStaticFactor * N;
+        return { sliding, maxStatic };
+    }
+
+    // 物理更新 (每帧)
+    function updatePhysics() {
+        // 自动增加拉力
+        autoForce += FORCE_STEP;
+        if (autoForce > FORCE_MAX) {
+            autoForce = 0.0;
+            // 重置木块位置速度
+            posMeter = 0.5;
+            velocity = 0;
+            isMoving = false;
+        }
+        force = autoForce;
+        forceSlider.value = autoForce;
+        forceVal.innerText = autoForce.toFixed(2) + ' N';
+
+        const { sliding, maxStatic } = calcFrictions();
+
+        const eps = 1e-4;
+        let frictionForce = 0;
+
+        if (Math.abs(velocity) < eps && !isMoving) {
+            // 静止状态
+            if (force <= maxStatic) {
+                frictionForce = force;
+                isMoving = false;
+            } else {
+                frictionForce = sliding;
+                velocity = 0.01; // 启动
+                isMoving = true;
+            }
+        } else {
+            frictionForce = sliding;
+            isMoving = true;
+        }
+
+        // 合力
+        let netForce = force - frictionForce * Math.sign(velocity || 1);
+        if (!isMoving) netForce = 0;
+
+        let acc = netForce / m;
+        const dt = 0.02;
+
+        if (isMoving) {
+            velocity += acc * dt;
+            posMeter += velocity * dt;
+
+            if (posMeter < posMin) {
+                posMeter = posMin;
+                if (velocity < 0) velocity = 0;
+            }
+            if (posMeter > posMax) {
+                posMeter = posMax;
+                if (velocity > 0) velocity = 0;
+            }
+
+            if (Math.abs(velocity) < 1e-5 && Math.abs(netForce) < 1e-4) {
+                velocity = 0;
+                isMoving = false;
+            }
+        } else {
+            velocity = 0;
+        }
+
+        // 更新当前摩擦力显示
+        if (!isMoving) {
+            currentFriction = force;
+            if (currentFriction > maxStatic) currentFriction = maxStatic;
+        } else {
+            currentFriction = sliding;
+        }
+
+        staticSpan.innerText = (!isMoving ? currentFriction.toFixed(2) : '0.00') + ' N';
+        slidingSpan.innerText = sliding.toFixed(2) + ' N';
+        maxStaticSpan.innerText = maxStatic.toFixed(2) + ' N';
+    }
+
+    // 绘制动画
+    function drawAnimation() {
+        const w = animCanvas.width, h = animCanvas.height;
+        ctxAnim.clearRect(0, 0, w, h);
+
+        // 地面
+        ctxAnim.fillStyle = '#264a66';
+        ctxAnim.fillRect(0, h-40, w, 20);
+        ctxAnim.fillStyle = '#1b3c55';
+        ctxAnim.fillRect(0, h-20, w, 20);
+
+        // 刻度
+        ctxAnim.strokeStyle = '#608bbf';
+        ctxAnim.lineWidth = 1;
+        for (let meter = 0; meter <= 4; meter++) {
+            let x = 100 + meter * 80;
+            ctxAnim.beginPath();
+            ctxAnim.moveTo(x, h-45);
+            ctxAnim.lineTo(x, h-25);
+            ctxAnim.stroke();
+            ctxAnim.fillStyle = '#9fc0e3';
+            ctxAnim.font = '10px monospace';
+            ctxAnim.fillText(meter+'m', x-10, h-50);
+        }
+
+        // 木块
+        let blockX = 100 + posMeter * 80;
+        let blockY = h-70;
+        let blockW = 48, blockH = 30;
+
+        ctxAnim.fillStyle = '#b38b60';
+        ctxAnim.shadowColor = '#7a5a3e';
+        ctxAnim.shadowBlur = 8;
+        ctxAnim.fillRect(blockX, blockY, blockW, blockH);
+        ctxAnim.shadowBlur = 0;
+        ctxAnim.strokeStyle = '#e0b27c';
+        ctxAnim.lineWidth = 2;
+        ctxAnim.strokeRect(blockX, blockY, blockW, blockH);
+        ctxAnim.fillStyle = 'white';
+        ctxAnim.font = 'bold 14px sans-serif';
+        ctxAnim.fillText('木块', blockX+6, blockY+22);
+
+        // 弹簧
+        let fixX = 40, fixY = blockY + blockH/2;
+        let springEndX = blockX - 5;
+
+        ctxAnim.beginPath();
+        ctxAnim.strokeStyle = '#ffcf8a';
+        ctxAnim.lineWidth = 3;
+        let steps = 8;
+        for (let i=0; i<=steps; i++) {
+            let t = i/steps;
+            let x = fixX * (1-t) + springEndX * t;
+            let y = fixY + 6 * Math.sin(i * 1.5);
+            if (i===0) ctxAnim.moveTo(x, y);
+            else ctxAnim.lineTo(x, y);
+        }
+        ctxAnim.stroke();
+
+        // 测力计指针
+        let forceRatio = force / FORCE_MAX;
+        let pointerAngle = forceRatio * 1.2;
+        ctxAnim.beginPath();
+        ctxAnim.arc(70, 50, 25, 0, 2*Math.PI);
+        ctxAnim.fillStyle = '#2b3f5a';
+        ctxAnim.fill();
+        ctxAnim.strokeStyle = '#7ea6d4';
+        ctxAnim.lineWidth = 2;
+        ctxAnim.stroke();
+        ctxAnim.beginPath();
+        ctxAnim.moveTo(70, 50);
+        ctxAnim.lineTo(70 + 20 * Math.sin(pointerAngle), 50 - 20 * Math.cos(pointerAngle));
+        ctxAnim.strokeStyle = '#ffaa33';
+        ctxAnim.lineWidth = 2;
+        ctxAnim.stroke();
+        ctxAnim.fillStyle = 'white';
+        ctxAnim.font = 'bold 12px monospace';
+        ctxAnim.fillText('F='+force.toFixed(1)+'N', 45, 30);
+    }
+
+    // 绘制曲线
+    function drawCurve() {
+        const w = curveCanvas.width, h = curveCanvas.height;
+        ctxCurve.clearRect(0, 0, w, h);
+
+        // 坐标轴
+        ctxCurve.strokeStyle = '#5588b1';
+        ctxCurve.lineWidth = 1.5;
+        ctxCurve.beginPath();
+        ctxCurve.moveTo(40, 10);
+        ctxCurve.lineTo(40, h-20);
+        ctxCurve.lineTo(w-20, h-20);
+        ctxCurve.stroke();
+
+        ctxCurve.fillStyle = '#aac9f0';
+        ctxCurve.font = '9px monospace';
+        ctxCurve.fillText('0', 30, h-15);
+        ctxCurve.fillText('F拉', w-35, h-5);
+        ctxCurve.fillText('f', 10, 20);
+
+        const { sliding, maxStatic } = calcFrictions();
+        const maxF = Math.max(sliding, maxStatic, 15);
+        const mapX = (f) => 40 + (w-70) * (f / FORCE_MAX);
+        const mapY = (fric) => h-20 - (h-40) * (fric / maxF);
+
+        // 静摩擦段
+        ctxCurve.beginPath();
+        ctxCurve.strokeStyle = '#cccccc';
+        ctxCurve.lineWidth = 2.5;
+        ctxCurve.setLineDash([5,3]);
+        ctxCurve.moveTo(mapX(0), mapY(0));
+        ctxCurve.lineTo(mapX(maxStatic), mapY(maxStatic));
+        ctxCurve.stroke();
+
+        // 垂直虚线（突变）
+        ctxCurve.beginPath();
+        ctxCurve.setLineDash([5,3]);
+        ctxCurve.strokeStyle = '#cccccc';
+        ctxCurve.moveTo(mapX(maxStatic), mapY(maxStatic));
+        ctxCurve.lineTo(mapX(maxStatic), mapY(sliding));
+        ctxCurve.stroke();
+
+        // 滑动摩擦水平段
+        ctxCurve.beginPath();
+        ctxCurve.setLineDash([]);
+        ctxCurve.strokeStyle = '#88aadd';
+        ctxCurve.lineWidth = 2.5;
+        ctxCurve.moveTo(mapX(maxStatic), mapY(sliding));
+        ctxCurve.lineTo(mapX(FORCE_MAX), mapY(sliding));
+        ctxCurve.stroke();
+
+        // 标记点
+        ctxCurve.beginPath();
+        ctxCurve.arc(mapX(maxStatic), mapY(maxStatic), 5, 0, 2*Math.PI);
+        ctxCurve.strokeStyle = '#ffaa33';
+        ctxCurve.lineWidth = 2;
+        ctxCurve.stroke();
+
+        ctxCurve.beginPath();
+        ctxCurve.arc(mapX(maxStatic), mapY(sliding), 4, 0, 2*Math.PI);
+        ctxCurve.strokeStyle = '#88aadd';
+        ctxCurve.lineWidth = 1.5;
+        ctxCurve.stroke();
+
+        // 当前工作点
+        let currentF = isMoving ? sliding : force;
+        if (force > maxStatic && !isMoving) currentF = maxStatic;
+        else if (isMoving) currentF = sliding;
+        else currentF = force;
+
+        ctxCurve.beginPath();
+        ctxCurve.arc(mapX(force), mapY(currentF), 6, 0, 2*Math.PI);
+        ctxCurve.fillStyle = '#ff6666';
+        ctxCurve.shadowColor = '#f00';
+        ctxCurve.shadowBlur = 8;
+        ctxCurve.fill();
+        ctxCurve.shadowBlur = 0;
+
+        ctxCurve.setLineDash([]);
+    }
+
+    // 动画循环
+    function animate() {
+        updatePhysics();
+        drawAnimation();
+        drawCurve();
+        requestAnimationFrame(animate);
+    }
+
+    // 重置
+    function reset() {
+        autoForce = 0.0;
+        posMeter = 0.5;
+        velocity = 0.0;
+        isMoving = false;
+        forceSlider.value = 0;
+        forceVal.innerText = '0.00 N';
+    }
+
+    // 事件绑定
+    pressureSlider.addEventListener('input', function(e) {
+        N = parseFloat(e.target.value);
+        pressureVal.innerText = N.toFixed(1) + ' N';
+    });
+    muSlider.addEventListener('input', function(e) {
+        mu = parseFloat(e.target.value);
+        muVal.innerText = mu.toFixed(2);
+    });
+
+    resetBtn.addEventListener('click', reset);
+
+    // 初始化
+    function init() {
+        updateSliderReadouts();
+        reset();
+        animate();
+    }
+    init();
+})();
+</script>
+</body>
+</html>

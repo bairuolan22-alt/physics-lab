@@ -1,0 +1,2987 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光学全反射现象动画模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: #e3f2fd;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #4fc3f7, #29b6f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .simulation-area {
+            flex: 3;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0d47a1, #1565c0);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #simulationCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .panel-section {
+            background: rgba(13, 71, 161, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #29b6f6;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h2 i {
+            font-size: 1.3rem;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #bbdefb;
+        }
+        
+        .light-source-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(41, 182, 246, 0.1);
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+        
+        .source-item:hover {
+            background: rgba(41, 182, 246, 0.25);
+            transform: translateY(-3px);
+            border-color: #29b6f6;
+        }
+        
+        .source-item:active {
+            cursor: grabbing;
+        }
+        
+        .source-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(41, 182, 246, 0.3);
+            border-radius: 8px;
+            font-size: 1.5rem;
+            color: #e3f2fd;
+        }
+        
+        .source-info {
+            flex: 1;
+        }
+        
+        .source-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .source-desc {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .parameter-control {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .param-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .param-label {
+            font-weight: 500;
+            color: #bbdefb;
+        }
+        
+        .param-value {
+            font-weight: 600;
+            color: #4fc3f7;
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(187, 222, 251, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #29b6f6;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(41, 182, 246, 0.8);
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+        
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(211, 47, 47, 0.4);
+        }
+        
+        .info-btn {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            color: white;
+        }
+        
+        .info-btn:hover {
+            background: linear-gradient(135deg, #388e3c, #2e7d32);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(56, 142, 60, 0.4);
+        }
+        
+        .test-btn {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+        }
+        
+        .test-btn:hover {
+            background: linear-gradient(135deg, #f57c00, #e65100);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(245, 124, 0, 0.4);
+        }
+        
+        .result-display {
+            background: rgba(13, 71, 161, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+        
+        .formula-display {
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            color: #e3f2fd;
+            overflow-x: auto;
+            line-height: 1.8;
+            border: 1px solid rgba(41, 182, 246, 0.3);
+        }
+        
+        .water-surface {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        
+        .instructions {
+            background: rgba(41, 182, 246, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border-left: 4px solid #29b6f6;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #90caf9;
+            font-size: 0.95rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 10px;
+        }
+        
+        .formula-equation {
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            font-family: 'Cambria Math', serif;
+        }
+        
+        /* 动态测试弹窗新增样式 */
+        .dynamic-test-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .dynamic-test-content {
+            background: linear-gradient(135deg, #283593, #1a237e);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .source-specific-question {
+            background: rgba(41, 182, 246, 0.2);
+            border: 2px solid #29b6f6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .question-hint {
+            font-size: 0.9rem;
+            color: #90caf9;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        .dynamic-test-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 原有的测试弹窗样式 */
+        .test-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .test-modal-content {
+            background: linear-gradient(135deg, #283593, #1a237e);
+            width: 90%;
+            max-width: 700px;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(41, 182, 246, 0.5);
+        }
+        
+        .test-title {
+            font-size: 1.8rem;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
+        
+        .test-subtitle {
+            color: #bbdefb;
+            font-size: 1rem;
+        }
+        
+        .question-container {
+            margin-bottom: 20px;
+        }
+        
+        .question {
+            background: rgba(13, 71, 161, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #29b6f6;
+        }
+        
+        .question-title {
+            font-size: 1.2rem;
+            color: #e3f2fd;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .question-number {
+            background: #29b6f6;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .option:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .option.selected {
+            background: rgba(41, 182, 246, 0.3);
+            border: 2px solid #29b6f6;
+        }
+        
+        .option input {
+            display: none;
+        }
+        
+        .option-label {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #bbdefb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #bbdefb;
+        }
+        
+        .option.selected .option-label {
+            background: #29b6f6;
+            border-color: #29b6f6;
+            color: white;
+        }
+        
+        .option-text {
+            flex: 1;
+            color: #e3f2fd;
+        }
+        
+        .short-answer {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e3f2fd;
+            font-size: 1rem;
+            margin-top: 10px;
+            resize: vertical;
+        }
+        
+        .short-answer:focus {
+            outline: none;
+            border-color: #29b6f6;
+        }
+        
+        .test-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(41, 182, 246, 0.3);
+        }
+        
+        .test-btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            color: white;
+        }
+        
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #388e3c, #2e7d32);
+            transform: translateY(-2px);
+        }
+        
+        .close-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+        
+        .close-btn:hover {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            transform: translateY(-2px);
+        }
+        
+        .result-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .result-content {
+            background: linear-gradient(135deg, #283593, #1a237e);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .score-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin: 20px 0;
+            text-shadow: 0 5px 15px rgba(79, 195, 247, 0.5);
+        }
+        
+        .score-text {
+            font-size: 1.5rem;
+            color: #bbdefb;
+            margin-bottom: 25px;
+        }
+        
+        .feedback {
+            background: rgba(13, 71, 161, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .feedback-title {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .feedback-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+        
+        .correct {
+            color: #4caf50;
+        }
+        
+        .incorrect {
+            color: #f44336;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .simulation-area, .control-panel {
+                width: 100%;
+            }
+            
+            .canvas-container {
+                height: 400px;
+            }
+            
+            .test-modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .question {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- ===== 导航栏开始 ===== -->
+<div id="top-nav" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(135deg, #1a237e, #283593);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+">
+    <button onclick="location.href='../index.html'" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">🏠 主页</button>
+
+    <button onclick="history.back()" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">⬅ 返回上级</button>
+</div>
+<div style="height: 60px;"></div>
+<!-- ===== 导航栏结束 ===== -->
+
+    <div class="container">
+        <header>
+            <h1>光学全反射现象动画模拟器</h1>
+            <p class="subtitle">模拟不同形状光源在水下的全反射现象，检测学生对知识点的掌握情况</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="simulation-area">
+                <h2><i>🔮</i> 模拟展示区</h2>
+                <div class="canvas-container">
+                    <canvas id="simulationCanvas"></canvas>
+                    <div class="water-surface" id="waterSurface" style="top: 250px;"></div>
+                </div>
+                <div class="instructions">
+                    <p><strong>使用说明：</strong> 从右侧面板拖拽光源到水下区域，调整参数观察不同光源的全反射现象和透光区域变化。新增：<strong>红色高亮光线</strong>显示连接光源和透光区域最边缘的边界光线。</p>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div class="panel-section">
+                    <h2><i>💡</i> 光源选择</h2>
+                    <div class="light-source-selector">
+                        <div class="source-item" data-type="point" draggable="true">
+                            <div class="source-icon">•</div>
+                            <div class="source-info">
+                                <div class="source-name">点光源</div>
+                                <div class="source-desc">形成圆形光斑，可产生彩色光圈</div>
+                            </div>
+                        </div>
+                        <div class="source-item" data-type="line" draggable="true">
+                            <div class="source-icon">—</div>
+                            <div class="source-info">
+                                <div class="source-name">直线光源</div>
+                                <div class="source-desc">形成矩形光带和两个半圆</div>
+                            </div>
+                        </div>
+                        <div class="source-item" data-type="ring" draggable="true">
+                            <div class="source-icon">⭘</div>
+                            <div class="source-info">
+                                <div class="source-name">环形光源</div>
+                                <div class="source-desc">随深度变化形成不同形状发光区域</div>
+                            </div>
+                        </div>
+                        <div class="source-item" data-type="circle" draggable="true">
+                            <div class="source-icon">○</div>
+                            <div class="source-info">
+                                <div class="source-name">圆形光源</div>
+                                <div class="source-desc">形成圆形透光区域，无暗区</div>
+                            </div>
+                        </div>
+                        <div class="source-item" data-type="rectangle" draggable="true">
+                            <div class="source-icon">▭</div>
+                            <div class="source-info">
+                                <div class="source-name">矩形光源</div>
+                                <div class="source-desc">形成带圆角的矩形透光区域</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h2><i>⚙️</i> 参数控制</h2>
+                    <div class="parameter-control">
+                        <div class="param-group">
+                            <h3>介质参数</h3>
+                            <div class="param-row">
+                                <span class="param-label">水深 (d):</span>
+                                <span class="param-value" id="depthValue">10</span>
+                            </div>
+                            <input type="range" id="depthSlider" min="5" max="30" value="10" step="1">
+                            
+                            <div class="param-row">
+                                <span class="param-label">折射率 (n):</span>
+                                <span class="param-value" id="refractiveIndexValue">1.33</span>
+                            </div>
+                            <input type="range" id="refractiveIndexSlider" min="1.2" max="2.0" value="1.33" step="0.01">
+                            
+                            <div class="param-row">
+                                <span class="param-label">临界角 (C):</span>
+                                <span class="param-value" id="criticalAngleValue">48.8°</span>
+                            </div>
+                        </div>
+                        
+                        <div class="param-group" id="sourceParamsGroup">
+                            <h3 id="sourceParamsTitle">光源参数</h3>
+                            <div id="sourceParameters">
+                                <p>请先选择或拖拽一个光源</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h2><i>📐</i> 计算结果</h2>
+                    <div class="result-display">
+                        <div class="result-title">
+                            <i>📊</i> 透光面积与公式
+                        </div>
+                        <div class="result-content">
+                            <div class="result-item">
+                                <span>当前光源类型:</span>
+                                <span id="currentSourceType">无</span>
+                            </div>
+                            <div class="result-item">
+                                <span>透光面积:</span>
+                                <span id="transmissionArea">0</span>
+                            </div>
+                            <div class="result-item">
+                                <span>边界半径/宽度:</span>
+                                <span id="boundaryValue">0</span>
+                            </div>
+                            <div class="formula-display" id="formulaDisplay">
+                                请添加光源查看计算公式
+                            </div>
+                            <div class="formula-equation" id="detailedFormula">
+                                透光边界 = 第一条全反射光线位置
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="reset-btn" id="resetBtn">
+                        <i>🔄</i> 重置模拟
+                    </button>
+                    <button class="info-btn" id="infoBtn">
+                        <i>ℹ️</i> 物理原理
+                    </button>
+                    <button class="test-btn" id="generalTestBtn">
+                        <i>📝</i> 综合测试
+                    </button>
+                    <button class="test-btn" id="sourceSpecificTestBtn">
+                        <i>🔍</i> 光源专项测试
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>光学全反射现象动画模拟器 | 基于《一只小牛顿》物理原理 | 新增边界光线显示</p>
+        </footer>
+    </div>
+    
+    <!-- 综合测试弹窗 -->
+    <div class="test-modal" id="generalTestModal">
+        <div class="test-modal-content">
+            <div class="test-header">
+                <h2 class="test-title">全反射现象综合测试</h2>
+                <p class="test-subtitle">请回答以下问题，测试您对全反射现象的理解程度</p>
+            </div>
+            
+            <form id="generalTestForm">
+                <div class="question-container">
+                    <div class="question">
+                        <div class="question-title">
+                            <div class="question-number">1</div>
+                            <span>全反射现象发生的条件是什么？</span>
+                        </div>
+                        <div class="options">
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">A</div>
+                                <div class="option-text">光线从光疏介质射向光密介质，入射角大于临界角</div>
+                                <input type="radio" name="q1" value="A">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">B</div>
+                                <div class="option-text">光线从光密介质射向光疏介质，入射角小于临界角</div>
+                                <input type="radio" name="q1" value="B">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">C</div>
+                                <div class="option-text">光线从光密介质射向光疏介质，入射角大于临界角</div>
+                                <input type="radio" name="q1" value="C">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">D</div>
+                                <div class="option-text">光线从任何介质射向任何介质，入射角为90°</div>
+                                <input type="radio" name="q1" value="D">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question">
+                        <div class="question-title">
+                            <div class="question-number">2</div>
+                            <span>临界角C与折射率n的关系公式是：sin C = ______</span>
+                        </div>
+                        <input type="text" class="short-answer" name="q2" placeholder="请输入公式" id="q2Answer">
+                    </div>
+                    
+                    <div class="question">
+                        <div class="question-title">
+                            <div class="question-number">3</div>
+                            <span>关于透光区域的边界，下列说法正确的是？</span>
+                        </div>
+                        <div class="options">
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">A</div>
+                                <div class="option-text">边界就是光源在水面的投影</div>
+                                <input type="radio" name="q3" value="A">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">B</div>
+                                <div class="option-text">边界是第一条折射光线出现的位置</div>
+                                <input type="radio" name="q3" value="B">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">C</div>
+                                <div class="option-text">边界是第一条全反射光线出现的位置</div>
+                                <input type="radio" name="q3" value="C">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">D</div>
+                                <div class="option-text">边界与水深无关</div>
+                                <input type="radio" name="q3" value="D">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question">
+                        <div class="question-title">
+                            <div class="question-number">4</div>
+                            <span>当水深增加时，透光区域的边界会如何变化？</span>
+                        </div>
+                        <div class="options">
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">A</div>
+                                <div class="option-text">边界向内收缩</div>
+                                <input type="radio" name="q4" value="A">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">B</div>
+                                <div class="option-text">边界向外扩展</div>
+                                <input type="radio" name="q4" value="B">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">C</div>
+                                <div class="option-text">边界保持不变</div>
+                                <input type="radio" name="q4" value="C">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">D</div>
+                                <div class="option-text">边界形状完全改变</div>
+                                <input type="radio" name="q4" value="D">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question">
+                        <div class="question-title">
+                            <div class="question-number">5</div>
+                            <span>下列哪种光源的透光区域没有暗区？</span>
+                        </div>
+                        <div class="options">
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">A</div>
+                                <div class="option-text">点光源</div>
+                                <input type="radio" name="q5" value="A">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">B</div>
+                                <div class="option-text">直线光源</div>
+                                <input type="radio" name="q5" value="B">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">C</div>
+                                <div class="option-text">圆形光源</div>
+                                <input type="radio" name="q5" value="C">
+                            </div>
+                            <div class="option" onclick="selectGeneralOption(this)">
+                                <div class="option-label">D</div>
+                                <div class="option-text">环形光源</div>
+                                <input type="radio" name="q5" value="D">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="test-actions">
+                    <button type="button" class="test-btn close-btn" id="closeGeneralTestBtn">
+                        关闭
+                    </button>
+                    <button type="button" class="test-btn submit-btn" id="submitGeneralTestBtn">
+                        提交答案
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 光源专项测试弹窗 -->
+    <div class="dynamic-test-modal" id="dynamicTestModal">
+        <div class="dynamic-test-content">
+            <div class="test-header">
+                <h2 class="test-title">光源知识点专项检测</h2>
+                <p class="test-subtitle" id="dynamicTestSubtitle">请根据当前光源回答相关问题</p>
+            </div>
+            
+            <div id="dynamicQuestionContainer">
+                <!-- 动态问题将在这里生成 -->
+            </div>
+            
+            <div class="dynamic-test-actions">
+                <button type="button" class="test-btn close-btn" id="closeDynamicTestBtn">
+                    关闭
+                </button>
+                <button type="button" class="test-btn submit-btn" id="submitDynamicTestBtn">
+                    提交答案
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 测试结果弹窗 -->
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <h2 class="test-title">测试结果</h2>
+            <div class="score-display" id="scoreDisplay">0</div>
+            <div class="score-text" id="scoreText">您答对了 0/5 道题</div>
+            
+            <div class="feedback">
+                <h3 class="feedback-title">题目解析：</h3>
+                <div id="feedbackContent">
+                    <!-- 反馈内容将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <div class="test-actions" style="margin-top: 25px;">
+                <button type="button" class="test-btn close-btn" id="closeResultBtn">
+                    关闭
+                </button>
+                <button type="button" class="test-btn submit-btn" id="retryTestBtn">
+                    重新测试
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const depthSlider = document.getElementById('depthSlider');
+        const depthValue = document.getElementById('depthValue');
+        const refractiveIndexSlider = document.getElementById('refractiveIndexSlider');
+        const refractiveIndexValue = document.getElementById('refractiveIndexValue');
+        const criticalAngleValue = document.getElementById('criticalAngleValue');
+        const sourceParameters = document.getElementById('sourceParameters');
+        const sourceParamsTitle = document.getElementById('sourceParamsTitle');
+        const currentSourceType = document.getElementById('currentSourceType');
+        const transmissionArea = document.getElementById('transmissionArea');
+        const boundaryValue = document.getElementById('boundaryValue');
+        const formulaDisplay = document.getElementById('formulaDisplay');
+        const detailedFormula = document.getElementById('detailedFormula');
+        const waterSurface = document.getElementById('waterSurface');
+        const resetBtn = document.getElementById('resetBtn');
+        const infoBtn = document.getElementById('infoBtn');
+        const generalTestBtn = document.getElementById('generalTestBtn');
+        const sourceSpecificTestBtn = document.getElementById('sourceSpecificTestBtn');
+        const generalTestModal = document.getElementById('generalTestModal');
+        const dynamicTestModal = document.getElementById('dynamicTestModal');
+        const resultModal = document.getElementById('resultModal');
+        
+        // 设置画布尺寸
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            params.waterSurfaceY = canvas.height / 2;
+            waterSurface.style.top = `${params.waterSurfaceY}px`;
+            drawSimulation();
+        }
+        
+        // 初始化参数
+        let params = {
+            depth: parseInt(depthSlider.value), // 水深 d
+            refractiveIndex: parseFloat(refractiveIndexSlider.value), // 折射率 n
+            criticalAngle: 0, // 临界角 C（计算得出）
+            waterSurfaceY: 250 // 水面Y坐标
+        };
+        
+        // 存储光源数据
+        let lightSources = [];
+        let selectedSource = null;
+        let draggingSource = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let animationFrameId = null;
+        let animationTime = 0;
+        
+        // 新增：存储边界光线数据
+        let boundaryRay = {
+            startX: 0,
+            startY: 0,
+            endX: 0,
+            endY: 0,
+            surfaceIntersectX: 0,
+            surfaceIntersectY: 0,
+            angle: 0,
+            length: 0,
+            isActive: false
+        };
+        
+        // 动态测试题库
+        const questionBank = {
+            point: [
+                {
+                    question: "点光源在水下深度为d处，形成的圆形光斑半径r的公式是？",
+                    options: [
+                        "r = d / n",
+                        "r = d × tan C",
+                        "r = d × sin C", 
+                        "r = d × cos C"
+                    ],
+                    correct: 1,
+                    explanation: "正确答案：r = d × tan C。根据几何关系，光斑半径r等于水深d乘以临界角的正切值。",
+                    formula: "r = d·tanC"
+                },
+                {
+                    question: "点光源的透光面积S的公式是？",
+                    options: [
+                        "S = πd²",
+                        "S = πd²/(n²-1)",
+                        "S = 2πd tanC",
+                        "S = πd² tan²C"
+                    ],
+                    correct: 1,
+                    explanation: "正确答案：S = πd²/(n²-1)。这是点光源透光面积的标准公式。",
+                    formula: "S = πd²/(n²-1)"
+                },
+                {
+                    question: "当水深d增加时，点光源的光斑边界会如何变化？",
+                    options: [
+                        "边界向内收缩",
+                        "边界保持不变",
+                        "边界向外扩展",
+                        "先扩展后收缩"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：边界向外扩展。因为r = d·tanC，水深d增加时光斑半径也会增加。"
+                }
+            ],
+            line: [
+                {
+                    question: "直线光源的透光区域由什么形状组成？",
+                    options: [
+                        "一个完整的圆形",
+                        "两个圆形",
+                        "矩形加两个半圆",
+                        "三角形区域"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：矩形加两个半圆。直线光源的透光区域中间是矩形，两端是两个半圆。"
+                },
+                {
+                    question: "直线光源透光面积公式S = π(d tanC)² + 2ld tanC中，2ld tanC代表什么？",
+                    options: [
+                        "两个半圆的面积",
+                        "矩形部分的面积",
+                        "总周长",
+                        "最大宽度"
+                    ],
+                    correct: 1,
+                    explanation: "正确答案：矩形部分的面积。直线光源的透光面积由两个半圆（π(d tanC)²）和中间的矩形（2ld tanC）组成。"
+                },
+                {
+                    question: "当直线光源旋转角度时，透光区域的边界会如何变化？",
+                    options: [
+                        "形状完全改变",
+                        "大小改变但形状不变",
+                        "投影到水面的形状随角度变化",
+                        "没有任何变化"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：投影到水面的形状随角度变化。边界在水面的投影形状会随着光源角度而变化。"
+                }
+            ],
+            circle: [
+                {
+                    question: "圆形光源与其他光源相比，透光区域有什么特点？",
+                    options: [
+                        "中心有暗区",
+                        "边缘有缺口",
+                        "完全没有暗区",
+                        "由多个分离区域组成"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：完全没有暗区。圆形光源所有方向都能发出光线，因此水面上形成完整的圆形透光区域。"
+                },
+                {
+                    question: "圆形光源的透光面积公式S = π(r₀ + h tanC)²中，r₀代表什么？",
+                    options: [
+                        "光源到水面的距离",
+                        "光源的半径",
+                        "临界角对应的半径",
+                        "折射率"
+                    ],
+                    correct: 1,
+                    explanation: "正确答案：光源的半径。r₀是圆形光源本身的半径。"
+                }
+            ],
+            ring: [
+                {
+                    question: "环形光源在水下不同深度会形成几种不同的透光区域？",
+                    options: [
+                        "1种",
+                        "2种", 
+                        "3种",
+                        "4种"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：3种。根据深度h与h₀=√(n²-1)·r的关系，会形成三种不同的透光区域形状。"
+                },
+                {
+                    question: "当h = √(n²-1)·r时，环形光源在水面形成什么形状？",
+                    options: [
+                        "环形区域",
+                        "中心暗圆+环形亮区",
+                        "半径为2r的完整圆形",
+                        "两个分离的圆形"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：半径为2r的完整圆形。这是一个特殊情况，内外边界恰好相接形成一个完整的圆形。"
+                }
+            ],
+            rectangle: [
+                {
+                    question: "矩形光源的透光区域是什么形状？",
+                    options: [
+                        "标准矩形",
+                        "椭圆形",
+                        "带圆角的矩形",
+                        "十字形"
+                    ],
+                    correct: 2,
+                    explanation: "正确答案：带圆角的矩形。四个角会因为临界角而形成圆弧过渡。"
+                },
+                {
+                    question: "矩形光源公式S = ab + π(h tanC)²中，ab代表什么？",
+                    options: [
+                        "圆角部分的面积",
+                        "光源本身的面积",
+                        "投影矩形的面积",
+                        "临界角相关的面积"
+                    ],
+                    correct: 1,
+                    explanation: "正确答案：光源本身的面积。ab是矩形光源自身的面积。"
+                }
+            ]
+        };
+        
+        // 初始化
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            updateCriticalAngle();
+            setupEventListeners();
+            startAnimation();
+            
+            // 添加一个示例光源
+            addLightSource('point', canvas.width/2, params.waterSurfaceY + 50);
+        });
+        
+        // 调整窗口大小时重新设置画布
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 参数滑块事件
+            depthSlider.addEventListener('input', () => {
+                depthValue.textContent = depthSlider.value;
+                params.depth = parseInt(depthSlider.value);
+                updateCriticalAngle();
+                updateSimulation();
+            });
+            
+            refractiveIndexSlider.addEventListener('input', () => {
+                refractiveIndexValue.textContent = refractiveIndexSlider.value;
+                params.refractiveIndex = parseFloat(refractiveIndexSlider.value);
+                updateCriticalAngle();
+                updateSimulation();
+            });
+            
+            // 光源拖拽事件
+            const sourceItems = document.querySelectorAll('.source-item');
+            sourceItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+            });
+            
+            // 画布拖拽事件
+            canvas.addEventListener('dragover', handleDragOver);
+            canvas.addEventListener('drop', handleDrop);
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            
+            // 按钮事件
+            resetBtn.addEventListener('click', resetSimulation);
+            infoBtn.addEventListener('click', showPhysicsInfo);
+            generalTestBtn.addEventListener('click', () => {
+                generalTestModal.style.display = 'flex';
+                resetGeneralTestForm();
+            });
+            
+            sourceSpecificTestBtn.addEventListener('click', () => {
+                if (!selectedSource) {
+                    alert('请先选择一个光源！');
+                    return;
+                }
+                showDynamicTest(selectedSource.type);
+            });
+            
+            // 综合测试弹窗事件
+            const closeGeneralTestBtn = document.getElementById('closeGeneralTestBtn');
+            const submitGeneralTestBtn = document.getElementById('submitGeneralTestBtn');
+            
+            closeGeneralTestBtn.addEventListener('click', () => {
+                generalTestModal.style.display = 'none';
+            });
+            
+            submitGeneralTestBtn.addEventListener('click', submitGeneralTest);
+            
+            generalTestModal.addEventListener('click', (e) => {
+                if (e.target === generalTestModal) {
+                    generalTestModal.style.display = 'none';
+                }
+            });
+            
+            // 动态测试弹窗事件
+            const closeDynamicTestBtn = document.getElementById('closeDynamicTestBtn');
+            const submitDynamicTestBtn = document.getElementById('submitDynamicTestBtn');
+            
+            closeDynamicTestBtn.addEventListener('click', () => {
+                dynamicTestModal.style.display = 'none';
+            });
+            
+            submitDynamicTestBtn.addEventListener('click', submitDynamicTest);
+            
+            dynamicTestModal.addEventListener('click', (e) => {
+                if (e.target === dynamicTestModal) {
+                    dynamicTestModal.style.display = 'none';
+                }
+            });
+            
+            // 结果弹窗事件
+            const closeResultBtn = document.getElementById('closeResultBtn');
+            const retryTestBtn = document.getElementById('retryTestBtn');
+            
+            closeResultBtn.addEventListener('click', () => {
+                resultModal.style.display = 'none';
+            });
+            
+            retryTestBtn.addEventListener('click', () => {
+                resultModal.style.display = 'none';
+                if (selectedSource) {
+                    showDynamicTest(selectedSource.type);
+                } else {
+                    generalTestModal.style.display = 'flex';
+                }
+            });
+            
+            // 点击弹窗外部关闭弹窗
+            resultModal.addEventListener('click', (e) => {
+                if (e.target === resultModal) {
+                    resultModal.style.display = 'none';
+                }
+            });
+        }
+        
+        // 更新临界角
+        function updateCriticalAngle() {
+            // 计算临界角：sin C = 1/n
+            const sinC = 1 / params.refractiveIndex;
+            params.criticalAngle = Math.asin(sinC) * (180 / Math.PI);
+            criticalAngleValue.textContent = params.criticalAngle.toFixed(1) + '°';
+        }
+        
+        // 处理拖拽开始
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.closest('.source-item').dataset.type);
+        }
+        
+        // 处理拖拽经过
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+        
+        // 处理放置光源
+        function handleDrop(e) {
+            e.preventDefault();
+            const sourceType = e.dataTransfer.getData('text/plain');
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 确保光源放置在水面下方
+            const placedY = Math.min(y, params.waterSurfaceY - 20);
+            addLightSource(sourceType, x, placedY);
+        }
+        
+        // 处理画布鼠标按下
+        function handleCanvasMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 检查是否点击了光源
+            for (let i = lightSources.length - 1; i >= 0; i--) {
+                const source = lightSources[i];
+                if (isPointInSource(mouseX, mouseY, source)) {
+                    selectedSource = source;
+                    draggingSource = true;
+                    dragOffsetX = mouseX - source.x;
+                    dragOffsetY = mouseY - source.y;
+                    updateSourceParametersUI();
+                    updateSimulation();
+                    break;
+                }
+            }
+        }
+        
+        // 处理画布鼠标移动
+        function handleCanvasMouseMove(e) {
+            if (!draggingSource || !selectedSource) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 更新光源位置
+            selectedSource.x = mouseX - dragOffsetX;
+            selectedSource.y = mouseY - dragOffsetY;
+            
+            // 限制光源在画布内且在水面下方
+            selectedSource.x = Math.max(30, Math.min(canvas.width - 30, selectedSource.x));
+            selectedSource.y = Math.max(30, Math.min(params.waterSurfaceY - 20, selectedSource.y));
+            
+            updateSimulation();
+        }
+        
+        // 处理画布鼠标释放
+        function handleCanvasMouseUp() {
+            draggingSource = false;
+        }
+        
+        // 检查点是否在光源内
+        function isPointInSource(x, y, source) {
+            switch (source.type) {
+                case 'point':
+                    return Math.sqrt((x - source.x)**2 + (y - source.y)**2) <= 15;
+                case 'line':
+                    const halfLength = source.length / 2;
+                    const angleRad = source.angle * Math.PI / 180;
+                    const dx = x - source.x;
+                    const dy = y - source.y;
+                    const rotatedX = dx * Math.cos(-angleRad) - dy * Math.sin(-angleRad);
+                    const rotatedY = dx * Math.sin(-angleRad) + dy * Math.cos(-angleRad);
+                    return Math.abs(rotatedX) <= halfLength + 10 && Math.abs(rotatedY) <= 10;
+                case 'circle':
+                    return Math.sqrt((x - source.x)**2 + (y - source.y)**2) <= source.radius + 5;
+                case 'ring':
+                    const dist = Math.sqrt((x - source.x)**2 + (y - source.y)**2);
+                    return Math.abs(dist - source.radius) <= 10;
+                case 'rectangle':
+                    const halfWidth = source.width / 2;
+                    const halfHeight = source.height / 2;
+                    const dx2 = Math.abs(x - source.x);
+                    const dy2 = Math.abs(y - source.y);
+                    return dx2 <= halfWidth + 10 && dy2 <= halfHeight + 10;
+                default:
+                    return false;
+            }
+        }
+        
+        // 添加光源
+        function addLightSource(type, x, y) {
+            const source = {
+                id: Date.now() + Math.random(),
+                type: type,
+                x: x,
+                y: y,
+                color: getRandomLightColor()
+            };
+            
+            // 根据光源类型设置默认参数
+            switch (type) {
+                case 'point':
+                    source.radius = 5;
+                    source.isColored = true;
+                    break;
+                case 'line':
+                    source.length = 100;
+                    source.angle = 0;
+                    break;
+                case 'circle':
+                    source.radius = 40;
+                    break;
+                case 'ring':
+                    source.radius = 60;
+                    source.thickness = 15;
+                    break;
+                case 'rectangle':
+                    source.width = 80;
+                    source.height = 50;
+                    break;
+            }
+            
+            lightSources.push(source);
+            selectedSource = source;
+            updateSourceParametersUI();
+            updateSimulation();
+        }
+        
+        // 获取随机光源颜色
+        function getRandomLightColor() {
+            const colors = [
+                '#FF5252', // 红色
+                '#4CAF50', // 绿色
+                '#2196F3', // 蓝色
+                '#FF9800', // 橙色
+                '#9C27B0'  // 紫色
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // 更新光源参数UI
+        function updateSourceParametersUI() {
+            if (!selectedSource) {
+                sourceParameters.innerHTML = '<p>请先选择或拖拽一个光源</p>';
+                sourceParamsTitle.textContent = '光源参数';
+                return;
+            }
+            
+            const sourceName = getSourceName(selectedSource.type);
+            sourceParamsTitle.textContent = `${sourceName}参数`;
+            
+            let html = '';
+            
+            switch (selectedSource.type) {
+                case 'point':
+                    html = `
+                        <div class="param-row">
+                            <span class="param-label">半径:</span>
+                            <span class="param-value" id="pointRadiusValue">${selectedSource.radius}</span>
+                        </div>
+                        <input type="range" id="pointRadiusSlider" min="3" max="15" value="${selectedSource.radius}" step="1">
+                        <div class="param-row">
+                            <span class="param-label">彩色效果:</span>
+                            <span class="param-value">${selectedSource.isColored ? '开启' : '关闭'}</span>
+                        </div>
+                        <input type="range" id="pointColorSlider" min="0" max="1" value="${selectedSource.isColored ? 1 : 0}" step="1">
+                    `;
+                    break;
+                case 'line':
+                    html = `
+                        <div class="param-row">
+                            <span class="param-label">长度 (l):</span>
+                            <span class="param-value" id="lineLengthValue">${selectedSource.length}</span>
+                        </div>
+                        <input type="range" id="lineLengthSlider" min="50" max="200" value="${selectedSource.length}" step="5">
+                        
+                        <div class="param-row">
+                            <span class="param-label">角度:</span>
+                            <span class="param-value" id="lineAngleValue">${selectedSource.angle}</span>
+                        </div>
+                        <input type="range" id="lineAngleSlider" min="0" max="360" value="${selectedSource.angle}" step="1">
+                    `;
+                    break;
+                case 'circle':
+                    html = `
+                        <div class="param-row">
+                            <span class="param-label">半径 (r₀):</span>
+                            <span class="param-value" id="circleRadiusValue">${selectedSource.radius}</span>
+                        </div>
+                        <input type="range" id="circleRadiusSlider" min="20" max="100" value="${selectedSource.radius}" step="5">
+                    `;
+                    break;
+                case 'ring':
+                    html = `
+                        <div class="param-row">
+                            <span class="param-label">半径 (r):</span>
+                            <span class="param-value" id="ringRadiusValue">${selectedSource.radius}</span>
+                        </div>
+                        <input type="range" id="ringRadiusSlider" min="30" max="120" value="${selectedSource.radius}" step="5">
+                        
+                        <div class="param-row">
+                            <span class="param-label">厚度:</span>
+                            <span class="param-value" id="ringThicknessValue">${selectedSource.thickness}</span>
+                        </div>
+                        <input type="range" id="ringThicknessSlider" min="5" max="30" value="${selectedSource.thickness}" step="1">
+                    `;
+                    break;
+                case 'rectangle':
+                    html = `
+                        <div class="param-row">
+                            <span class="param-label">长度 (a):</span>
+                            <span class="param-value" id="rectWidthValue">${selectedSource.width}</span>
+                        </div>
+                        <input type="range" id="rectWidthSlider" min="40" max="150" value="${selectedSource.width}" step="5">
+                        
+                        <div class="param-row">
+                            <span class="param-label">宽度 (b):</span>
+                            <span class="param-value" id="rectHeightValue">${selectedSource.height}</span>
+                        </div>
+                        <input type="range" id="rectHeightSlider" min="30" max="100" value="${selectedSource.height}" step="5">
+                    `;
+                    break;
+            }
+            
+            sourceParameters.innerHTML = html;
+            
+            // 添加光源参数滑块事件监听器
+            addSourceParameterListeners();
+        }
+        
+        // 添加光源参数滑块事件监听器
+        function addSourceParameterListeners() {
+            if (!selectedSource) return;
+            
+            switch (selectedSource.type) {
+                case 'point':
+                    const pointRadiusSlider = document.getElementById('pointRadiusSlider');
+                    const pointRadiusValue = document.getElementById('pointRadiusValue');
+                    const pointColorSlider = document.getElementById('pointColorSlider');
+                    
+                    if (pointRadiusSlider) {
+                        pointRadiusSlider.addEventListener('input', () => {
+                            pointRadiusValue.textContent = pointRadiusSlider.value;
+                            selectedSource.radius = parseInt(pointRadiusSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    
+                    if (pointColorSlider) {
+                        pointColorSlider.addEventListener('input', () => {
+                            selectedSource.isColored = pointColorSlider.value === '1';
+                            updateSimulation();
+                        });
+                    }
+                    break;
+                    
+                case 'line':
+                    const lineLengthSlider = document.getElementById('lineLengthSlider');
+                    const lineLengthValue = document.getElementById('lineLengthValue');
+                    const lineAngleSlider = document.getElementById('lineAngleSlider');
+                    const lineAngleValue = document.getElementById('lineAngleValue');
+                    
+                    if (lineLengthSlider) {
+                        lineLengthSlider.addEventListener('input', () => {
+                            lineLengthValue.textContent = lineLengthSlider.value;
+                            selectedSource.length = parseInt(lineLengthSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    
+                    if (lineAngleSlider) {
+                        lineAngleSlider.addEventListener('input', () => {
+                            lineAngleValue.textContent = lineAngleSlider.value;
+                            selectedSource.angle = parseInt(lineAngleSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    break;
+                    
+                case 'circle':
+                    const circleRadiusSlider = document.getElementById('circleRadiusSlider');
+                    const circleRadiusValue = document.getElementById('circleRadiusValue');
+                    
+                    if (circleRadiusSlider) {
+                        circleRadiusSlider.addEventListener('input', () => {
+                            circleRadiusValue.textContent = circleRadiusSlider.value;
+                            selectedSource.radius = parseInt(circleRadiusSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    break;
+                    
+                case 'ring':
+                    const ringRadiusSlider = document.getElementById('ringRadiusSlider');
+                    const ringRadiusValue = document.getElementById('ringRadiusValue');
+                    const ringThicknessSlider = document.getElementById('ringThicknessSlider');
+                    const ringThicknessValue = document.getElementById('ringThicknessValue');
+                    
+                    if (ringRadiusSlider) {
+                        ringRadiusSlider.addEventListener('input', () => {
+                            ringRadiusValue.textContent = ringRadiusSlider.value;
+                            selectedSource.radius = parseInt(ringRadiusSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    
+                    if (ringThicknessSlider) {
+                        ringThicknessSlider.addEventListener('input', () => {
+                            ringThicknessValue.textContent = ringThicknessSlider.value;
+                            selectedSource.thickness = parseInt(ringThicknessSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    break;
+                    
+                case 'rectangle':
+                    const rectWidthSlider = document.getElementById('rectWidthSlider');
+                    const rectWidthValue = document.getElementById('rectWidthValue');
+                    const rectHeightSlider = document.getElementById('rectHeightSlider');
+                    const rectHeightValue = document.getElementById('rectHeightValue');
+                    
+                    if (rectWidthSlider) {
+                        rectWidthSlider.addEventListener('input', () => {
+                            rectWidthValue.textContent = rectWidthSlider.value;
+                            selectedSource.width = parseInt(rectWidthSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    
+                    if (rectHeightSlider) {
+                        rectHeightSlider.addEventListener('input', () => {
+                            rectHeightValue.textContent = rectHeightSlider.value;
+                            selectedSource.height = parseInt(rectHeightSlider.value);
+                            updateSimulation();
+                        });
+                    }
+                    break;
+            }
+        }
+        
+        // 获取光源名称
+        function getSourceName(type) {
+            const names = {
+                'point': '点光源',
+                'line': '直线光源',
+                'circle': '圆形光源',
+                'ring': '环形光源',
+                'rectangle': '矩形光源'
+            };
+            return names[type] || type;
+        }
+        
+        // 更新模拟
+        function updateSimulation() {
+            drawSimulation();
+            updateCalculations();
+            // 新增：更新边界光线
+            if (selectedSource) {
+                calculateBoundaryRay(selectedSource);
+            }
+        }
+        
+        // ========== 修正的关键部分 ==========
+        // 计算边界光线 - 修正版
+        function calculateBoundaryRay(source) {
+            if (!source) {
+                boundaryRay.isActive = false;
+                return;
+            }
+            
+            const C = params.criticalAngle * Math.PI / 180;
+            const tanC = Math.tan(C);
+            const h = params.waterSurfaceY - source.y;
+            const d = params.depth;
+            
+            boundaryRay.isActive = true;
+            
+            switch (source.type) {
+                case 'point':
+                    // 点光源：红色光线直接连接光源中心到透光区域边缘
+                    boundaryRay.startX = source.x;
+                    boundaryRay.startY = source.y;
+                    
+                    // 透光区域半径
+                    const r = d * tanC;
+                    
+                    // 计算从光源到透光区域边缘的角度
+                    const requiredAngle = Math.atan2(r, h);
+                    boundaryRay.angle = requiredAngle;
+                    
+                    // 这条光线直接到达透光区域边缘
+                    boundaryRay.surfaceIntersectX = source.x + r;
+                    boundaryRay.surfaceIntersectY = params.waterSurfaceY;
+                    
+                    // 边界点就是透光区域边缘
+                    boundaryRay.endX = source.x + r;
+                    boundaryRay.endY = params.waterSurfaceY;
+                    break;
+                    
+                case 'line':
+                    // 直线光源：红色光线从端点连接到透光区域边缘
+                    const angleRad = source.angle * Math.PI / 180;
+                    
+                    // 透光区域半径
+                    const lineR = d * tanC;
+                    
+                    // 计算端点位置（选择右侧端点）
+                    const endX = source.x + Math.cos(angleRad) * source.length / 2;
+                    const endY = source.y + Math.sin(angleRad) * source.length / 2;
+                    
+                    boundaryRay.startX = endX;
+                    boundaryRay.startY = endY;
+                    
+                    // 计算透光区域边缘点
+                    const edgeX = endX + Math.cos(angleRad) * lineR;
+                    
+                    // 计算从端点到边缘点的角度
+                    const lineRequiredAngle = Math.atan2(params.waterSurfaceY - endY, edgeX - endX);
+                    boundaryRay.angle = lineRequiredAngle;
+                    
+                    // 水面交点就是边缘点
+                    boundaryRay.surfaceIntersectX = edgeX;
+                    boundaryRay.surfaceIntersectY = params.waterSurfaceY;
+                    
+                    // 边界点就是透光区域边缘
+                    boundaryRay.endX = edgeX;
+                    boundaryRay.endY = params.waterSurfaceY;
+                    break;
+                    
+                case 'circle':
+                    // 圆形光源：边界光线从边缘点发出，方向为临界角方向
+                    boundaryRay.startX = source.x + source.radius;
+                    boundaryRay.startY = source.y;
+                    
+                    // 计算临界角方向
+                    boundaryRay.angle = Math.PI/2 - C;
+                    
+                    // 计算光线与水面的交点
+                    const circleDistance = h / Math.cos(C);
+                    boundaryRay.surfaceIntersectX = source.x + source.radius + Math.sin(C) * circleDistance;
+                    boundaryRay.surfaceIntersectY = params.waterSurfaceY;
+                    
+                    // 计算水面上的边界点
+                    boundaryRay.endX = source.x + source.radius + h * tanC;
+                    boundaryRay.endY = params.waterSurfaceY;
+                    break;
+                    
+                case 'ring':
+                    // 环形光源：边界光线从外环发出
+                    boundaryRay.startX = source.x + source.radius;
+                    boundaryRay.startY = source.y;
+                    boundaryRay.angle = Math.PI/2 - C;
+                    
+                    // 计算光线与水面的交点
+                    const ringDistance = h / Math.cos(C);
+                    boundaryRay.surfaceIntersectX = source.x + source.radius + Math.sin(C) * ringDistance;
+                    boundaryRay.surfaceIntersectY = params.waterSurfaceY;
+                    
+                    // 计算水面上的边界点
+                    const h0 = Math.sqrt(params.refractiveIndex**2 - 1) * source.radius;
+                    if (Math.abs(h - h0) < 5) {
+                        boundaryRay.endX = source.x + 2 * source.radius;
+                    } else if (h > h0) {
+                        boundaryRay.endX = source.x + source.radius + h * tanC;
+                    } else {
+                        boundaryRay.endX = source.x + source.radius - h * tanC;
+                    }
+                    boundaryRay.endY = params.waterSurfaceY;
+                    break;
+                    
+                case 'rectangle':
+                    // 矩形光源：边界光线从角点发出
+                    boundaryRay.startX = source.x + source.width/2;
+                    boundaryRay.startY = source.y + source.height/2;
+                    boundaryRay.angle = Math.PI/4 - C;
+                    
+                    // 计算光线与水面的交点
+                    const rectDistance = h / Math.cos(C);
+                    boundaryRay.surfaceIntersectX = source.x + source.width/2 + Math.sin(C) * rectDistance;
+                    boundaryRay.surfaceIntersectY = params.waterSurfaceY;
+                    
+                    // 计算水面上的边界点
+                    boundaryRay.endX = source.x + source.width/2 + h * tanC;
+                    boundaryRay.endY = params.waterSurfaceY;
+                    break;
+                    
+                default:
+                    boundaryRay.isActive = false;
+            }
+            
+            // 计算光线总长度
+            if (boundaryRay.isActive) {
+                boundaryRay.length = Math.sqrt(
+                    Math.pow(boundaryRay.endX - boundaryRay.startX, 2) + 
+                    Math.pow(boundaryRay.endY - boundaryRay.startY, 2)
+                );
+            }
+        }
+        
+        // 更新计算结果
+        function updateCalculations() {
+            if (!selectedSource) {
+                currentSourceType.textContent = '无';
+                transmissionArea.textContent = '0';
+                boundaryValue.textContent = '0';
+                formulaDisplay.textContent = '请添加光源查看计算公式';
+                detailedFormula.textContent = '透光边界 = 第一条全反射光线位置';
+                return;
+            }
+            
+            const sourceName = getSourceName(selectedSource.type);
+            currentSourceType.textContent = sourceName;
+            
+            // 计算透光面积
+            const area = calculateTransmissionArea(selectedSource);
+            transmissionArea.textContent = area.toFixed(2);
+            
+            // 计算边界值
+            const boundary = calculateBoundaryValue(selectedSource);
+            boundaryValue.textContent = boundary;
+            
+            // 显示公式
+            const formulas = getAreaFormulas(selectedSource);
+            formulaDisplay.innerHTML = formulas.short;
+            detailedFormula.innerHTML = formulas.long;
+        }
+        
+        // 计算边界值
+        function calculateBoundaryValue(source) {
+            const d = params.depth;
+            const C = params.criticalAngle * Math.PI / 180;
+            const tanC = Math.tan(C);
+            const h = params.waterSurfaceY - source.y;
+            
+            switch (source.type) {
+                case 'point':
+                    const r = d * tanC;
+                    return `r = ${r.toFixed(2)}`;
+                    
+                case 'line':
+                    const lineR = d * tanC;
+                    return `宽度 = ${(2*lineR).toFixed(2)}`;
+                    
+                case 'circle':
+                    const circleR = source.radius + h * tanC;
+                    return `r = ${circleR.toFixed(2)}`;
+                    
+                case 'ring':
+                    const ringR = source.radius;
+                    const h0 = Math.sqrt(params.refractiveIndex**2 - 1) * ringR;
+                    
+                    if (Math.abs(h - h0) < 5) {
+                        return `R = ${(2*ringR).toFixed(2)}`;
+                    } else if (h > h0) {
+                        const brightRadius = h * tanC - ringR;
+                        return `内径 = ${brightRadius.toFixed(2)}`;
+                    } else {
+                        const darkRadius = ringR - h * tanC;
+                        return `暗区半径 = ${darkRadius.toFixed(2)}`;
+                    }
+                    
+                case 'rectangle':
+                    const rectR = h * tanC;
+                    return `圆角半径 = ${rectR.toFixed(2)}`;
+                    
+                default:
+                    return '0';
+            }
+        }
+        
+        // 计算透光面积
+        function calculateTransmissionArea(source) {
+            const d = params.depth;
+            const n = params.refractiveIndex;
+            const C = params.criticalAngle * Math.PI / 180;
+            const tanC = Math.tan(C);
+            const h = params.waterSurfaceY - source.y;
+            
+            switch (source.type) {
+                case 'point':
+                    const r = d * tanC;
+                    return Math.PI * r * r;
+                    
+                case 'line':
+                    const l = source.length;
+                    return Math.PI * Math.pow(d * tanC, 2) + 2 * l * d * tanC;
+                    
+                case 'circle':
+                    const r0 = source.radius;
+                    return Math.PI * Math.pow(r0 + h * tanC, 2);
+                    
+                case 'ring':
+                    const ringR = source.radius;
+                    const h0 = Math.sqrt(n*n - 1) * ringR;
+                    
+                    if (Math.abs(h - h0) < 5) {
+                        return Math.PI * Math.pow(2 * ringR, 2);
+                    } else if (h > h0) {
+                        const brightRadius = h * tanC - ringR;
+                        const ringWidth = 2 * ringR;
+                        return Math.PI * Math.pow(brightRadius, 2) + 
+                               Math.PI * (Math.pow(brightRadius + ringWidth, 2) - Math.pow(brightRadius, 2));
+                    } else {
+                        const darkRadius = ringR - h * tanC;
+                        return Math.PI * (Math.pow(ringR, 2) - Math.pow(darkRadius, 2));
+                    }
+                    
+                case 'rectangle':
+                    const a = source.width;
+                    const b = source.height;
+                    const rectR = h * tanC;
+                    return a * b + Math.PI * rectR * rectR;
+                    
+                default:
+                    return 0;
+            }
+        }
+        
+        // 获取面积公式
+        function getAreaFormulas(source) {
+            const C = 'C';
+            const d = 'd';
+            const n = 'n';
+            const h = 'h';
+            
+            switch (source.type) {
+                case 'point':
+                    return {
+                        short: '点光源：边界半径 r = d·tanC',
+                        long: '边界半径 r = d·tanC <br> 透光面积 S = πr² = πd²/(n²-1)'
+                    };
+                    
+                case 'line':
+                    const l = 'l';
+                    return {
+                        short: '直线光源：边界宽度 = 2d·tanC',
+                        long: `边界宽度 = 2d·tanC <br> 透光面积 S = π(d·tanC)² + 2l·d·tanC`
+                    };
+                    
+                case 'circle':
+                    const r0 = 'r₀';
+                    return {
+                        short: '圆形光源：边界半径 = r₀ + h·tanC',
+                        long: `边界半径 = ${r0} + ${h}·tanC <br> 无暗区，所有光线均能射出水面`
+                    };
+                    
+                case 'ring':
+                    const r = 'r';
+                    return {
+                        short: '环形光源：边界随深度变化',
+                        long: `当 h = √(${n}²-1)·${r} 时：形成半径为2r的圆形边界 <br>
+                               当 h > √(${n}²-1)·${r} 时：形成内外两个圆形边界 <br>
+                               当 h < √(${n}²-1)·${r} 时：形成中心暗圆+环形亮区域`
+                    };
+                    
+                case 'rectangle':
+                    const a = 'a';
+                    const b = 'b';
+                    return {
+                        short: '矩形光源：圆角半径 = h·tanC',
+                        long: `圆角半径 = ${h}·tanC <br> 透光面积 S = ${a}${b} + π(${h}·tanC)²`
+                    };
+                    
+                default:
+                    return {
+                        short: '未知光源类型',
+                        long: ''
+                    };
+            }
+        }
+        
+        // 开始动画
+        function startAnimation() {
+            function animate() {
+                animationTime += 0.05;
+                drawSimulation();
+                animationFrameId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        
+        // 绘制模拟
+        function drawSimulation() {
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制水下背景（渐变的蓝色）
+            const waterGradient = ctx.createLinearGradient(0, 0, 0, params.waterSurfaceY);
+            waterGradient.addColorStop(0, 'rgba(13, 71, 161, 0.8)');
+            waterGradient.addColorStop(1, 'rgba(21, 101, 192, 0.9)');
+            ctx.fillStyle = waterGradient;
+            ctx.fillRect(0, 0, canvas.width, params.waterSurfaceY);
+            
+            // 绘制水上背景（深蓝色）
+            ctx.fillStyle = 'rgba(13, 20, 33, 0.9)';
+            ctx.fillRect(0, params.waterSurfaceY, canvas.width, canvas.height - params.waterSurfaceY);
+            
+            // 绘制水面
+            drawWaterSurface();
+            
+            // 绘制光源
+            lightSources.forEach(source => {
+                drawLightSource(source);
+            });
+            
+            // 绘制透光区域
+            lightSources.forEach(source => {
+                drawTransmissionArea(source);
+            });
+            
+            // 绘制光线
+            lightSources.forEach(source => {
+                drawLightRays(source);
+            });
+            
+            // 新增：绘制边界光线（在其他光线之后绘制，确保在最上层）
+            if (selectedSource && boundaryRay.isActive) {
+                drawBoundaryRay();
+            }
+            
+            // 绘制选中光源的高亮
+            if (selectedSource) {
+                drawSelectedHighlight(selectedSource);
+            }
+            
+            // 绘制标注
+            drawLabels();
+        }
+        
+        // 绘制边界光线
+        function drawBoundaryRay() {
+            ctx.save();
+            
+            // 设置边界光线的特殊样式
+            ctx.strokeStyle = '#FF5252';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            
+            // 绘制光线路径
+            ctx.beginPath();
+            ctx.moveTo(boundaryRay.startX, boundaryRay.startY);
+            
+            // 绘制到水面交点的线段
+            ctx.lineTo(boundaryRay.surfaceIntersectX, boundaryRay.surfaceIntersectY);
+            
+            // 绘制水面上方的折射光线（虚线表示）
+            ctx.setLineDash([5, 3]);
+            ctx.lineTo(boundaryRay.endX, boundaryRay.endY);
+            
+            ctx.stroke();
+            
+            // 绘制起点标记（光源位置）
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(boundaryRay.startX, boundaryRay.startY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF5252';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 绘制水面交点标记
+            ctx.beginPath();
+            ctx.arc(boundaryRay.surfaceIntersectX, boundaryRay.surfaceIntersectY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF5252';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.stroke();
+            
+            // 绘制边界点标记
+            ctx.beginPath();
+            ctx.arc(boundaryRay.endX, boundaryRay.endY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF9800';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 绘制角度标注
+            const angleLabelX = boundaryRay.startX + 30 * Math.cos(boundaryRay.angle);
+            const angleLabelY = boundaryRay.startY + 30 * Math.sin(boundaryRay.angle);
+            
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#FF5252';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('边界光线', angleLabelX, angleLabelY);
+            
+            // 绘制角度弧线
+            const angleRadius = 25;
+            ctx.beginPath();
+            ctx.arc(boundaryRay.startX, boundaryRay.startY, angleRadius, 
+                   Math.PI/2, Math.PI/2 - boundaryRay.angle, true);
+            ctx.strokeStyle = '#FF5252';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        // 绘制水面
+        function drawWaterSurface() {
+            // 水面线
+            ctx.beginPath();
+            ctx.moveTo(0, params.waterSurfaceY);
+            ctx.lineTo(canvas.width, params.waterSurfaceY);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // 水面文字标注
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#e3f2fd';
+            ctx.fillText('水面', 20, params.waterSurfaceY - 10);
+            ctx.fillText('水上 (空气)', 20, params.waterSurfaceY + 25);
+            ctx.fillText('水下 (水)', 20, params.waterSurfaceY - 30);
+        }
+        
+        // 绘制光源
+        function drawLightSource(source) {
+            ctx.save();
+            
+            // 设置样式
+            if (source === selectedSource) {
+                ctx.fillStyle = source.color;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 3;
+            } else {
+                ctx.fillStyle = source.color;
+                ctx.strokeStyle = source.color;
+                ctx.lineWidth = 2;
+            }
+            
+            // 根据光源类型绘制
+            switch (source.type) {
+                case 'point':
+                    // 点光源：绘制闪烁效果
+                    ctx.beginPath();
+                    const pulseSize = 5 + 3 * Math.sin(animationTime * 3);
+                    ctx.arc(source.x, source.y, pulseSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                    
+                case 'line':
+                    ctx.save();
+                    ctx.translate(source.x, source.y);
+                    ctx.rotate(source.angle * Math.PI / 180);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(-source.length/2, 0);
+                    ctx.lineTo(source.length/2, 0);
+                    ctx.stroke();
+                    
+                    // 在两端画小圆点
+                    ctx.beginPath();
+                    ctx.arc(-source.length/2, 0, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(source.length/2, 0, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
+                    break;
+                    
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, source.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // 内部填充
+                    ctx.globalAlpha = 0.3;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                    break;
+                    
+                case 'ring':
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, source.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, source.radius - source.thickness, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                    
+                case 'rectangle':
+                    ctx.save();
+                    ctx.translate(source.x, source.y);
+                    
+                    ctx.beginPath();
+                    ctx.rect(-source.width/2, -source.height/2, source.width, source.height);
+                    ctx.stroke();
+                    
+                    // 内部填充
+                    ctx.globalAlpha = 0.3;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                    
+                    ctx.restore();
+                    break;
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制光线
+        function drawLightRays(source) {
+            const rayCount = source.type === 'point' ? 36 : 18;
+            const rayLength = 200;
+            const C = params.criticalAngle * Math.PI / 180;
+            const n_water = params.refractiveIndex;
+            const n_air = 1.0;
+            
+            for (let i = 0; i < rayCount; i++) {
+                // 计算光线角度
+                let angle;
+                if (source.type === 'point' || source.type === 'circle' || source.type === 'ring') {
+                    angle = (i / rayCount) * Math.PI * 2;
+                } else {
+                    angle = (i / (rayCount-1)) * Math.PI - Math.PI/2;
+                }
+                
+                // 计算光线起点
+                let startX, startY;
+                
+                switch (source.type) {
+                    case 'point':
+                        startX = source.x;
+                        startY = source.y;
+                        break;
+                        
+                    case 'line':
+                        const linePos = -source.length/2 + (i / (rayCount-1)) * source.length;
+                        const angleRad = source.angle * Math.PI / 180;
+                        startX = source.x + Math.cos(angleRad) * linePos;
+                        startY = source.y + Math.sin(angleRad) * linePos;
+                        break;
+                        
+                    case 'circle':
+                        const circleAngle = (i / rayCount) * Math.PI * 2;
+                        startX = source.x + Math.cos(circleAngle) * source.radius;
+                        startY = source.y + Math.sin(circleAngle) * source.radius;
+                        break;
+                        
+                    case 'ring':
+                        const ringAngle = (i / rayCount) * Math.PI * 2;
+                        startX = source.x + Math.cos(ringAngle) * source.radius;
+                        startY = source.y + Math.sin(ringAngle) * source.radius;
+                        break;
+                        
+                    case 'rectangle':
+                        const perimeter = 2 * (source.width + source.height);
+                        let pos = (i / rayCount) * perimeter;
+                        
+                        if (pos < source.width) {
+                            startX = source.x - source.width/2 + pos;
+                            startY = source.y - source.height/2;
+                        } else if (pos < source.width + source.height) {
+                            startX = source.x + source.width/2;
+                            startY = source.y - source.height/2 + (pos - source.width);
+                        } else if (pos < 2*source.width + source.height) {
+                            startX = source.x + source.width/2 - (pos - source.width - source.height);
+                            startY = source.y + source.height/2;
+                        } else {
+                            startX = source.x - source.width/2;
+                            startY = source.y + source.height/2 - (pos - 2*source.width - source.height);
+                        }
+                        break;
+                        
+                    default:
+                        startX = source.x;
+                        startY = source.y;
+                }
+                
+                // 计算光线方向
+                const dirX = Math.cos(angle);
+                const dirY = Math.sin(angle);
+                
+                // 计算光线与水面交点
+                if (startY < params.waterSurfaceY) {
+                    const t = (params.waterSurfaceY - startY) / dirY;
+                    
+                    if (t > 0) {
+                        const intersectX = startX + dirX * t;
+                        
+                        // 计算入射角（相对于法线）
+                        const incidentAngle = Math.abs(Math.atan2(dirY, dirX) - (-Math.PI/2));
+                        
+                        // 判断是否发生全反射
+                        if (incidentAngle > C) {
+                            // 全反射：绘制反射光线
+                            ctx.beginPath();
+                            ctx.moveTo(startX, startY);
+                            ctx.lineTo(intersectX, params.waterSurfaceY);
+                            
+                            // 计算反射方向
+                            const reflectDirX = dirX;
+                            const reflectDirY = -dirY;
+                            
+                            ctx.lineTo(
+                                intersectX + reflectDirX * 50,
+                                params.waterSurfaceY + reflectDirY * 50
+                            );
+                            
+                            ctx.strokeStyle = 'rgba(255, 100, 100, 0.6)';
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+                        } else {
+                            // 折射：绘制折射光线
+                            ctx.beginPath();
+                            ctx.moveTo(startX, startY);
+                            ctx.lineTo(intersectX, params.waterSurfaceY);
+                            
+                            // 根据斯涅尔定律计算折射角
+                            const sinTheta1 = Math.sin(incidentAngle);
+                            const sinTheta2 = (n_water / n_air) * sinTheta1;
+                            const refractionAngle = Math.asin(sinTheta2);
+                            
+                            // 计算折射方向
+                            const refractionDirX = Math.sin(refractionAngle) * Math.sign(dirX);
+                            const refractionDirY = -Math.cos(refractionAngle);
+                            
+                            ctx.lineTo(
+                                intersectX + refractionDirX * rayLength,
+                                params.waterSurfaceY + refractionDirY * rayLength
+                            );
+                            
+                            if (source.type === 'point' && source.isColored) {
+                                let rayColor;
+                                if (incidentAngle < C * 0.3) {
+                                    rayColor = 'rgba(255, 100, 100, 0.6)';
+                                } else if (incidentAngle < C * 0.6) {
+                                    rayColor = 'rgba(100, 255, 100, 0.6)';
+                                } else {
+                                    rayColor = 'rgba(100, 100, 255, 0.6)';
+                                }
+                                ctx.strokeStyle = rayColor;
+                            } else {
+                                ctx.strokeStyle = 'rgba(100, 200, 255, 0.6)';
+                            }
+                            
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 绘制透光区域
+        function drawTransmissionArea(source) {
+            const d = params.depth;
+            const C = params.criticalAngle * Math.PI / 180;
+            const tanC = Math.tan(C);
+            const h = params.waterSurfaceY - source.y;
+            const n = params.refractiveIndex;
+            
+            ctx.save();
+            ctx.globalAlpha = 0.4;
+            
+            switch (source.type) {
+                case 'point':
+                    const r = d * tanC;
+                    ctx.beginPath();
+                    ctx.arc(source.x, params.waterSurfaceY, r, 0, Math.PI * 2);
+                    
+                    if (source.isColored) {
+                        const gradient = ctx.createRadialGradient(
+                            source.x, params.waterSurfaceY, 0,
+                            source.x, params.waterSurfaceY, r
+                        );
+                        gradient.addColorStop(0, 'rgba(255, 100, 100, 0.5)');
+                        gradient.addColorStop(0.33, 'rgba(255, 255, 100, 0.5)');
+                        gradient.addColorStop(0.66, 'rgba(100, 255, 100, 0.5)');
+                        gradient.addColorStop(1, 'rgba(100, 100, 255, 0.5)');
+                        ctx.fillStyle = gradient;
+                    } else {
+                        ctx.fillStyle = source.color;
+                    }
+                    
+                    ctx.fill();
+                    break;
+                    
+                case 'line':
+                    const lineR = d * tanC;
+                    const angleRad = source.angle * Math.PI / 180;
+                    
+                    ctx.save();
+                    ctx.translate(source.x, params.waterSurfaceY);
+                    ctx.rotate(angleRad);
+                    
+                    ctx.beginPath();
+                    ctx.arc(-source.length/2, 0, lineR, 0, Math.PI * 2);
+                    ctx.arc(source.length/2, 0, lineR, 0, Math.PI * 2);
+                    ctx.rect(-source.length/2, -lineR, source.length, 2*lineR);
+                    
+                    ctx.fillStyle = source.color;
+                    ctx.fill();
+                    ctx.restore();
+                    break;
+                    
+                case 'circle':
+                    const circleR = source.radius + h * tanC;
+                    ctx.beginPath();
+                    ctx.arc(source.x, params.waterSurfaceY, circleR, 0, Math.PI * 2);
+                    ctx.fillStyle = source.color;
+                    ctx.fill();
+                    break;
+                    
+                case 'ring':
+                    const ringR = source.radius;
+                    const h0 = Math.sqrt(n*n - 1) * ringR;
+                    
+                    if (Math.abs(h - h0) < 5) {
+                        ctx.beginPath();
+                        ctx.arc(source.x, params.waterSurfaceY, 2 * ringR, 0, Math.PI * 2);
+                        ctx.fillStyle = source.color;
+                        ctx.fill();
+                    } else if (h > h0) {
+                        const brightRadius = h * tanC - ringR;
+                        const ringWidth = 2 * ringR;
+                        
+                        ctx.beginPath();
+                        ctx.arc(source.x, params.waterSurfaceY, brightRadius, 0, Math.PI * 2);
+                        ctx.fillStyle = source.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(source.x, params.waterSurfaceY, brightRadius + ringWidth, 0, Math.PI * 2);
+                        ctx.arc(source.x, params.waterSurfaceY, brightRadius, 0, Math.PI * 2, true);
+                        ctx.fillStyle = source.color;
+                        ctx.fill();
+                    } else {
+                        const darkRadius = ringR - h * tanC;
+                        
+                        ctx.beginPath();
+                        ctx.arc(source.x, params.waterSurfaceY, ringR, 0, Math.PI * 2);
+                        ctx.arc(source.x, params.waterSurfaceY, darkRadius, 0, Math.PI * 2, true);
+                        ctx.fillStyle = source.color;
+                        ctx.fill();
+                    }
+                    break;
+                    
+                case 'rectangle':
+                    const rectR = h * tanC;
+                    
+                    ctx.beginPath();
+                    const x = source.x - source.width/2 - rectR;
+                    const y = params.waterSurfaceY - source.height/2 - rectR;
+                    const width = source.width + 2*rectR;
+                    const height = source.height + 2*rectR;
+                    const radius = rectR;
+                    
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + width - radius, y);
+                    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                    ctx.lineTo(x + width, y + height - radius);
+                    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                    ctx.lineTo(x + radius, y + height);
+                    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.closePath();
+                    
+                    ctx.fillStyle = source.color;
+                    ctx.fill();
+                    break;
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制选中光源的高亮
+        function drawSelectedHighlight(source) {
+            ctx.save();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            const highlightSize = 10;
+            
+            switch (source.type) {
+                case 'point':
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, 20, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                    
+                case 'line':
+                    ctx.save();
+                    ctx.translate(source.x, source.y);
+                    ctx.rotate(source.angle * Math.PI / 180);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(-source.length/2 - highlightSize, -highlightSize);
+                    ctx.lineTo(source.length/2 + highlightSize, -highlightSize);
+                    ctx.lineTo(source.length/2 + highlightSize, highlightSize);
+                    ctx.lineTo(-source.length/2 - highlightSize, highlightSize);
+                    ctx.closePath();
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    break;
+                    
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, source.radius + highlightSize, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                    
+                case 'ring':
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, source.radius + highlightSize/2, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(source.x, source.y, source.radius - source.thickness - highlightSize/2, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                    
+                case 'rectangle':
+                    ctx.save();
+                    ctx.translate(source.x, source.y);
+                    
+                    ctx.beginPath();
+                    ctx.rect(-source.width/2 - highlightSize, -source.height/2 - highlightSize, 
+                            source.width + 2*highlightSize, source.height + 2*highlightSize);
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    break;
+            }
+            
+            ctx.restore();
+        }
+        
+        // 绘制标注
+        function drawLabels() {
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#e3f2fd';
+            ctx.textAlign = 'center';
+            
+            // 绘制参数值
+            ctx.fillText(`水深 d = ${params.depth}`, canvas.width - 80, 30);
+            ctx.fillText(`折射率 n = ${params.refractiveIndex.toFixed(2)}`, canvas.width - 80, 55);
+            ctx.fillText(`临界角 C = ${params.criticalAngle.toFixed(1)}°`, canvas.width - 80, 80);
+            
+            // 如果有选中的光源，显示其参数
+            if (selectedSource) {
+                const h = params.waterSurfaceY - selectedSource.y;
+                ctx.fillText(`光源深度 h = ${h.toFixed(1)}`, canvas.width - 80, 105);
+                
+                // 绘制深度线
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(selectedSource.x, selectedSource.y);
+                ctx.lineTo(selectedSource.x, params.waterSurfaceY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // 标注深度
+                ctx.fillText('h', selectedSource.x + 15, (selectedSource.y + params.waterSurfaceY)/2);
+            }
+        }
+        
+        // 重置模拟
+        function resetSimulation() {
+            lightSources = [];
+            selectedSource = null;
+            boundaryRay.isActive = false;
+            updateSourceParametersUI();
+            updateSimulation();
+        }
+        
+        // 显示物理原理
+        function showPhysicsInfo() {
+            alert("物理原理说明：\n\n" +
+                  "1. 全反射条件：光线从光密介质射向光疏介质，入射角大于临界角\n" +
+                  "2. 临界角公式：sin C = 1/n (水到空气)\n" +
+                  "3. 折射定律：n₁sinθ₁ = n₂sinθ₂ (斯涅尔定律)\n" +
+                  "4. 光线从水中射向空气时，折射角大于入射角\n" +
+                  "5. 严格按照图片中的公式计算透光区域：\n" +
+                  "   - 点光源：S = πr² = πd²/(n²-1)\n" +
+                  "   - 直线光源：S = π(d tanC)² + 2ld tanC\n" +
+                  "   - 圆形光源：S = π(r₀ + h tanC)²\n" +
+                  "   - 环形光源：随深度变化有三种情况\n" +
+                  "   - 矩形光源：S = ab + π(h tanC)²\n\n" +
+                  "新增功能：红色高亮光线显示连接光源和透光区域最边缘的边界光线。\n" +
+                  "这条光线与水面相交时，入射角恰好等于临界角C。");
+        }
+        
+        // 测试相关函数
+        function selectGeneralOption(optionElement) {
+            const question = optionElement.closest('.question');
+            const options = question.querySelectorAll('.option');
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            optionElement.classList.add('selected');
+            
+            const radioInput = optionElement.querySelector('input[type="radio"]');
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+        }
+        
+        function resetGeneralTestForm() {
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            document.querySelectorAll('.short-answer').forEach(input => {
+                input.value = '';
+            });
+        }
+        
+        function submitGeneralTest() {
+            let score = 0;
+            const totalQuestions = 5;
+            const feedback = [];
+            
+            // 正确答案
+            const correctAnswers = {
+                q1: 'C',
+                q2: '1/n',
+                q3: 'C',
+                q4: 'B',
+                q5: 'C'
+            };
+            
+            // 题目解析
+            const questionExplanations = {
+                q1: "正确答案：C。全反射发生的条件是光线从光密介质射向光疏介质，且入射角大于临界角。",
+                q2: "正确答案：sin C = 1/n。这是临界角与折射率的基本关系，由斯涅尔定律推导得出。",
+                q3: "正确答案：C。透光区域的边界就是第一条全反射光线出现的位置，这是全反射现象的重要特征。",
+                q4: "正确答案：B。当水深增加时，透光区域的边界会向外扩展，因为光线在水中的传播距离增加了。",
+                q5: "正确答案：C。圆形光源的透光区域没有暗区，因为所有方向的光线都能以小于临界角的角度射出水面。"
+            };
+            
+            // 检查每个问题
+            for (let i = 1; i <= totalQuestions; i++) {
+                const questionKey = `q${i}`;
+                const userAnswer = getGeneralTestAnswer(questionKey);
+                const correctAnswer = correctAnswers[questionKey];
+                const isCorrect = checkGeneralTestAnswer(questionKey, userAnswer);
+                
+                if (isCorrect) {
+                    score++;
+                }
+                
+                feedback.push(`
+                    <div class="feedback-item">
+                        <strong>问题 ${i}:</strong> 
+                        <span class="${isCorrect ? 'correct' : 'incorrect'}">
+                            ${isCorrect ? '✓ 正确' : '✗ 错误'}
+                        </span><br>
+                        ${questionExplanations[questionKey]}
+                    </div>
+                `);
+            }
+            
+            // 显示结果
+            const percentage = Math.round((score / totalQuestions) * 100);
+            scoreDisplay.textContent = percentage;
+            scoreText.textContent = `您答对了 ${score}/${totalQuestions} 道题`;
+            feedbackContent.innerHTML = feedback.join('');
+            
+            // 显示结果弹窗
+            generalTestModal.style.display = 'none';
+            resultModal.style.display = 'flex';
+        }
+        
+        function getGeneralTestAnswer(questionKey) {
+            if (questionKey === 'q2') {
+                const input = document.getElementById('q2Answer');
+                return input ? input.value.trim().toLowerCase() : '';
+            } else {
+                const selected = document.querySelector(`input[name="${questionKey}"]:checked`);
+                return selected ? selected.value : '';
+            }
+        }
+        
+        function checkGeneralTestAnswer(questionKey, userAnswer) {
+            const correctAnswers = {
+                q1: 'C',
+                q2: '1/n',
+                q3: 'C',
+                q4: 'B',
+                q5: 'C'
+            };
+            
+            if (questionKey === 'q2') {
+                return userAnswer === '1/n';
+            } else {
+                return userAnswer === correctAnswers[questionKey];
+            }
+        }
+        
+        // 动态测试功能
+        function showDynamicTest(sourceType) {
+            const subtitle = document.getElementById('dynamicTestSubtitle');
+            const container = document.getElementById('dynamicQuestionContainer');
+            
+            subtitle.textContent = `当前光源：${getSourceName(sourceType)} - 请回答相关问题`;
+            container.innerHTML = '';
+            
+            const questions = questionBank[sourceType];
+            if (!questions || questions.length === 0) {
+                container.innerHTML = '<p>暂无该光源类型的问题。</p>';
+                dynamicTestModal.style.display = 'flex';
+                return;
+            }
+            
+            // 随机选择1-2个问题
+            const selectedQuestions = [];
+            const usedIndices = new Set();
+            const numQuestions = Math.min(2, questions.length);
+            
+            while (selectedQuestions.length < numQuestions && usedIndices.size < questions.length) {
+                const randomIndex = Math.floor(Math.random() * questions.length);
+                if (!usedIndices.has(randomIndex)) {
+                    usedIndices.add(randomIndex);
+                    selectedQuestions.push(questions[randomIndex]);
+                }
+            }
+            
+            // 生成问题HTML
+            let html = '';
+            selectedQuestions.forEach((q, index) => {
+                html += `
+                    <div class="source-specific-question" data-index="${index}" data-correct="${q.correct}">
+                        <div class="question-title">
+                            <div class="question-number">${index + 1}</div>
+                            <span>${q.question}</span>
+                        </div>
+                        ${q.formula ? `<div class="question-hint">相关公式：${q.formula}</div>` : ''}
+                        <div class="options">
+                `;
+                
+                q.options.forEach((option, optIndex) => {
+                    html += `
+                        <div class="option" onclick="selectDynamicOption(this, ${index})">
+                            <div class="option-label">${String.fromCharCode(65 + optIndex)}</div>
+                            <div class="option-text">${option}</div>
+                            <input type="radio" name="q${index}" value="${optIndex}">
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            dynamicTestModal.style.display = 'flex';
+        }
+        
+        function selectDynamicOption(optionElement, questionIndex) {
+            const question = optionElement.closest('.source-specific-question');
+            const options = question.querySelectorAll('.option');
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            optionElement.classList.add('selected');
+            
+            const radioInput = optionElement.querySelector('input[type="radio"]');
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+        }
+        
+        function submitDynamicTest() {
+            const questions = document.querySelectorAll('.source-specific-question');
+            let correctCount = 0;
+            let totalCount = questions.length;
+            let results = [];
+            
+            questions.forEach((question, index) => {
+                const selected = question.querySelector(`input[name="q${index}"]:checked`);
+                const correctIndex = parseInt(question.dataset.correct);
+                
+                if (selected) {
+                    const userAnswer = parseInt(selected.value);
+                    const isCorrect = userAnswer === correctIndex;
+                    
+                    if (isCorrect) correctCount++;
+                    
+                    // 获取问题数据
+                    const sourceType = selectedSource ? selectedSource.type : 'point';
+                    const questionData = questionBank[sourceType].find(q => 
+                        q.question === question.querySelector('.question-title span').textContent
+                    );
+                    
+                    results.push({
+                        question: questionData.question,
+                        userAnswer: questionData.options[userAnswer],
+                        correctAnswer: questionData.options[correctIndex],
+                        explanation: questionData.explanation,
+                        isCorrect: isCorrect
+                    });
+                }
+            });
+            
+            // 显示结果
+            showDynamicTestResults(correctCount, totalCount, results);
+        }
+        
+        function showDynamicTestResults(correctCount, totalCount, results) {
+            dynamicTestModal.style.display = 'none';
+            
+            const resultHtml = `
+                <div class="result-modal" id="dynamicResultModal" style="display: flex;">
+                    <div class="result-content">
+                        <h2 class="test-title">光源专项测试结果</h2>
+                        <div class="score-display">${Math.round((correctCount/totalCount)*100)}</div>
+                        <div class="score-text">您答对了 ${correctCount}/${totalCount} 道题</div>
+                        
+                        <div class="feedback">
+                            <h3 class="feedback-title">题目解析：</h3>
+                            ${results.map((result, index) => `
+                                <div class="feedback-item">
+                                    <strong>问题 ${index + 1}:</strong> ${result.question}<br>
+                                    <span class="${result.isCorrect ? 'correct' : 'incorrect'}">
+                                        ${result.isCorrect ? '✓ 正确' : '✗ 错误'}
+                                    </span><br>
+                                    您的答案：${result.userAnswer}<br>
+                                    正确答案：${result.correctAnswer}<br>
+                                    解析：${result.explanation}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="test-actions" style="margin-top: 25px;">
+                            <button type="button" class="test-btn close-btn" onclick="document.getElementById('dynamicResultModal').style.display='none'">
+                                关闭
+                            </button>
+                            <button type="button" class="test-btn submit-btn" onclick="showDynamicTest('${selectedSource.type}')">
+                                重新测试
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = resultHtml;
+            document.body.appendChild(tempDiv.firstElementChild);
+        }
+        
+        // 暴露函数给全局作用域
+        window.selectDynamicOption = selectDynamicOption;
+    </script>
+</body>
+</html>

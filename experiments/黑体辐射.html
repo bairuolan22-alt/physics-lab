@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑体辐射模拟</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .control-panel {
+            width: 320px;
+            padding: 25px;
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+            border-right: 1px solid #eaeaea;
+        }
+        
+        .chart-container {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fafafa;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .control-group {
+            margin-bottom: 22px;
+            padding: 15px;
+            border: 1px solid #e1e5eb;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .control-group:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 14px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 12px;
+            height: 8px;
+            border-radius: 4px;
+            background: #dfe6e9;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .value-display {
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            border-left: 4px solid #3498db;
+        }
+        
+        canvas {
+            border: 1px solid #e1e5eb;
+            margin-top: 15px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(to right, #e3f2fd, #bbdefb);
+            border-left: 5px solid #2196F3;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #34495e;
+        }
+        
+        .color-box {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            border-radius: 3px;
+        }
+        
+        .curve-color {
+            background-color: #FF6B6B;
+        }
+        
+        .peak-color {
+            background-color: red;
+        }
+        
+        .phenomenon-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(to right, #fff3cd, #ffeaa7);
+            border-left: 5px solid #ffc107;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        .quiz-button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+            background: linear-gradient(to right, #3a9bfc 0%, #00d9f0 100%);
+        }
+        
+        .quiz-button:active {
+            transform: translateY(0);
+        }
+        
+        /* 弹出窗口样式 */
+        .quiz-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .quiz-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90vw;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .question {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .options {
+            margin: 15px 0;
+        }
+        
+        .option {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .option:hover {
+            background-color: #e9ecef;
+        }
+        
+        .option.selected {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(to right, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<!-- ===== 导航栏开始 ===== -->
+<div id="top-nav" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(135deg, #1a237e, #283593);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+">
+    <button onclick="location.href='../index.html'" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">🏠 主页</button>
+
+    <button onclick="history.back()" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">⬅ 返回上级</button>
+</div>
+<div style="height: 60px;"></div>
+<!-- ===== 导航栏结束 ===== -->
+
+    <h1>黑体辐射模拟</h1>
+    <div class="container">
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="control-group">
+                <label for="temperature">温度调节 (K):</label>
+                <input type="range" id="temperature" min="1000" max="6000" value="5000" step="10">
+                <div class="value-display">当前温度: <span id="tempValue">5000</span> K</div>
+            </div>
+            
+            <div class="control-group">
+                <label>峰值波长 λ_max:</label>
+                <div class="value-display"><span id="peakWavelength">--- nm</span></div>
+            </div>
+            
+            <div class="control-group">
+                <label>总辐射功率:</label>
+                <div class="value-display"><span id="totalPower">--- W/m²</span></div>
+            </div>
+            
+            <div class="info-box">
+                <strong>说明：</strong><br>
+                1. 拖动滑块可改变黑体温度<br>
+                2. 曲线显示不同波长的辐射强度<br>
+                3. 红点标记峰值波长位置
+            </div>
+            
+            <div class="phenomenon-info">
+                <strong>黑体辐射现象：</strong><br>
+                • 温度升高时，各波长辐射强度均显著增大<br>
+                • 辐射强度极大值向短波方向移动（维恩位移）<br>
+                • 总辐射功率随温度四次方增长（斯特藩-玻尔兹曼定律）
+            </div>
+            
+            <button id="quizButton" class="quiz-button">知识检测</button>
+        </div>
+        
+        <!-- 图表区域 -->
+        <div class="chart-container">
+            <canvas id="radiationChart" width="700" height="500"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="color-box curve-color"></div>
+                    <span>辐射曲线</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box peak-color"></div>
+                    <span>峰值波长</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 知识检测弹窗 -->
+    <div id="quizModal" class="quiz-modal">
+        <div class="quiz-content">
+            <span class="close-btn" id="closeQuiz">&times;</span>
+            <h3>黑体辐射知识检测</h3>
+            <div id="quizContainer">
+                <!-- 问题将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 物理常量
+        const h = 6.62607015e-34;  // 普朗克常数 (J·s)
+        const c = 299792458;        // 光速 (m/s)
+        const k = 1.380649e-23;     // 玻尔兹曼常数 (J/K)
+        const sigma = 5.670374419e-8; // 斯特藩-玻尔兹曼常数 (W·m⁻²·K⁻⁴)
+        const WienConstant = 2.897e-3; // 维恩位移常数 (m·K)
+
+        // 获取DOM元素
+        const tempSlider = document.getElementById('temperature');
+        const tempValue = document.getElementById('tempValue');
+        const peakWavelength = document.getElementById('peakWavelength');
+        const totalPower = document.getElementById('totalPower');
+        const canvas = document.getElementById('radiationChart');
+        const ctx = canvas.getContext('2d');
+
+        // 初始化
+        updateDisplay();
+
+        // 温度变化事件监听
+        tempSlider.addEventListener('input', function() {
+            updateDisplay();
+        });
+
+        // 更新显示内容
+        function updateDisplay() {
+            const temperature = parseInt(tempSlider.value);
+            tempValue.textContent = temperature;
+            
+            // 计算峰值波长
+            const lambdaMax = WienConstant / temperature; // 单位：米
+            peakWavelength.textContent = (lambdaMax * 1e9).toFixed(2) + ' nm'; // 转换为纳米
+            
+            // 计算总辐射功率
+            const power = sigma * Math.pow(temperature, 4);
+            totalPower.textContent = power.toExponential(3) + ' W/m²';
+            
+            // 绘制辐射曲线
+            drawRadiationCurve(temperature);
+        }
+
+        // 绘制辐射曲线
+        function drawRadiationCurve(temperature) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 60; // 图表边距
+
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制坐标轴
+            ctx.beginPath();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            // X轴 (波长)
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            
+            // Y轴
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            
+            ctx.stroke();
+            
+            // 添加轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            
+            // X轴标签
+            ctx.fillText('波长 λ (μm)', width / 2, height - 15);
+            
+            // Y轴标签 (旋转文字)
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('光谱辐射强度 B(λ,T) (W·sr⁻¹·m⁻³)', 0, 0);
+            ctx.restore();
+            
+            // 波长范围 (0.1 - 10 微米)
+            const lambdaMin = 0.1e-6; // 0.1微米转换为米
+            const lambdaMax = 10e-6;  // 10微米转换为米
+            
+            // 计算当前温度下的最大辐射强度
+            let maxValue = 0;
+            for (let i = 0; i <= 1000; i++) {
+                const lambda = lambdaMin + (lambdaMax - lambdaMin) * i / 1000;
+                const value = planckRadiation(lambda, temperature);
+                if (value > maxValue) maxValue = value;
+            }
+            
+            // 为了同时展示温度升高时光谱强度增加和峰值移动的现象，
+            // 使用一个固定参考温度的最大值作为归一化因子
+            const refTemp = 3000; // 参考温度
+            let refMaxValue = 0;
+            for (let i = 0; i <= 1000; i++) {
+                const lambda = lambdaMin + (lambdaMax - lambdaMin) * i / 1000;
+                const value = planckRadiation(lambda, refTemp);
+                if (value > refMaxValue) refMaxValue = value;
+            }
+            
+            // 使用参考温度的最大值进行归一化，
+            // 这样可以在同一尺度下比较不同温度的强度
+            const normFactor = refMaxValue;
+            
+            // 绘制当前温度的辐射曲线
+            ctx.beginPath();
+            ctx.strokeStyle = '#FF6B6B';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i <= 1000; i++) {
+                const lambda = lambdaMin + (lambdaMax - lambdaMin) * i / 1000;
+                
+                // 计算x坐标 (波长)
+                const x = padding + (i / 1000) * (width - 2 * padding);
+                
+                // 计算y坐标 (辐射强度)
+                const intensity = planckRadiation(lambda, temperature);
+                const y = height - padding - (intensity / normFactor) * (height - 2 * padding);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // 标记峰值波长位置
+            const peakLambda = WienConstant / temperature;
+            const peakIntensity = planckRadiation(peakLambda, temperature);
+            const peakX = padding + ((peakLambda - lambdaMin) / (lambdaMax - lambdaMin)) * (width - 2 * padding);
+            const peakY = height - padding - (peakIntensity / normFactor) * (height - 2 * padding);
+            
+            // 绘制峰值标记
+            ctx.beginPath();
+            ctx.fillStyle = 'red';
+            ctx.arc(peakX, peakY, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 绘制网格线
+            drawGridLines(width, height, padding);
+            
+            // 添加刻度标记
+            drawAxisLabels(width, height, padding, lambdaMin, lambdaMax);
+        }
+        
+        // 绘制网格线
+        function drawGridLines(width, height, padding) {
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 1;
+            
+            // 垂直网格线 (波长轴)
+            for (let i = 1; i < 10; i++) {
+                const x = padding + i * (width - 2 * padding) / 10;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+            }
+            
+            // 水平网格线 (强度轴)
+            for (let i = 1; i < 5; i++) {
+                const y = padding + i * (height - 2 * padding) / 5;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制轴标签
+        function drawAxisLabels(width, height, padding, lambdaMin, lambdaMax) {
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // X轴刻度 (波长)
+            for (let i = 0; i <= 10; i++) {
+                const lambdaValue = lambdaMin + i * (lambdaMax - lambdaMin) / 10;
+                const x = padding + i * (width - 2 * padding) / 10;
+                const lambdaMicrometer = lambdaValue * 1e6; // 转换为微米
+                ctx.fillText(lambdaMicrometer.toFixed(1), x, height - padding + 20);
+            }
+            
+            // Y轴刻度 (强度)
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + i * (height - 2 * padding) / 5;
+                const intensityFraction = (5 - i) / 5; // 反向，因为y轴向下
+                ctx.fillText((intensityFraction * 100).toFixed(0) + '%', padding - 10, y + 5);
+            }
+        }
+
+        // 普朗克黑体辐射定律函数
+        function planckRadiation(lambda, temperature) {
+            // B(λ,T) = (2hc²)/(λ⁵) × 1/(e^(hc/(λkT)) - 1)
+            const numerator = 2 * h * c * c;
+            const denominator = Math.pow(lambda, 5);
+            const expTerm = h * c / (lambda * k * temperature);
+            
+            // 避免指数过大导致溢出
+            if (expTerm > 700) {
+                return 0;
+            }
+            
+            const intensity = numerator / denominator / (Math.exp(expTerm) - 1);
+            return intensity;
+        }
+        
+        /* 知识检测功能 */
+        
+        // 知识检测题库
+        const quizQuestions = [
+            {
+                question: "根据维恩位移定律，当黑体温度升高时，辐射强度峰值对应的波长如何变化？",
+                options: ["向长波方向移动", "向短波方向移动", "保持不变", "随机变化"],
+                answer: 1,
+                explanation: "维恩位移定律表明：λ_max × T = 常数，因此温度升高时，峰值波长向短波方向移动。"
+            },
+            {
+                question: "黑体辐射的总功率与温度的关系遵循哪个定律？",
+                options: ["维恩位移定律", "普朗克定律", "斯特藩-玻尔兹曼定律", "基尔霍夫定律"],
+                answer: 2,
+                explanation: "斯特藩-玻尔兹曼定律表明：总辐射功率密度 j* = σT⁴，与温度的四次方成正比。"
+            },
+            {
+                question: "普朗克黑体辐射定律主要解释了什么？",
+                options: ["辐射强度与波长和温度的关系", "物体的质量与能量的关系", "光的传播速度", "热量传导的规律"],
+                answer: 0,
+                explanation: "普朗克定律给出了黑体辐射的光谱辐射强度与波长和温度的定量关系。"
+            },
+            {
+                question: "当黑体温度从3000K升高到6000K时，总辐射功率大约变为原来的多少倍？",
+                options: ["2倍", "4倍", "8倍", "16倍"],
+                answer: 3,
+                explanation: "根据斯特藩-玻尔兹曼定律，总功率与温度四次方成正比。T₂/T₁ = 2，则功率比为2⁴ = 16倍。"
+            },
+            {
+                question: "在可见光范围内，高温黑体（如6000K）的辐射强度相比于低温黑体（如3000K）如何？",
+                options: ["更低", "更高", "相同", "仅在红光部分更高"],
+                answer: 1,
+                explanation: "根据普朗克定律，高温黑体在各个波长的辐射强度都高于低温黑体，只是峰值位置向短波移动。"
+            }
+        ];
+        
+        // 获取DOM元素
+        const quizButton = document.getElementById('quizButton');
+        const quizModal = document.getElementById('quizModal');
+        const closeQuiz = document.getElementById('closeQuiz');
+        const quizContainer = document.getElementById('quizContainer');
+        
+        // 当前题目索引
+        let currentQuestionIndex = 0;
+        
+        // 显示知识检测弹窗
+        quizButton.addEventListener('click', () => {
+            quizModal.style.display = 'flex';
+            showQuestion(currentQuestionIndex);
+        });
+        
+        // 关闭弹窗
+        closeQuiz.addEventListener('click', () => {
+            quizModal.style.display = 'none';
+        });
+        
+        // 点击外部关闭弹窗
+        window.addEventListener('click', (event) => {
+            if (event.target === quizModal) {
+                quizModal.style.display = 'none';
+            }
+        });
+        
+        // 显示问题
+        function showQuestion(index) {
+            const questionData = quizQuestions[index];
+            
+            let optionsHtml = '';
+            questionData.options.forEach((option, i) => {
+                optionsHtml += `
+                    <label class="option" onclick="selectOption(this, ${i})">
+                        <input type="radio" name="quiz-option" value="${i}" style="display:none;">
+                        ${String.fromCharCode(65 + i)}. ${option}
+                    </label>`;
+            });
+            
+            quizContainer.innerHTML = `
+                <div class="question">
+                    <strong>第${index + 1}/${quizQuestions.length}题：</strong>${questionData.question}
+                </div>
+                <div class="options">
+                    ${optionsHtml}
+                </div>
+                <div class="navigation">
+                    <button class="submit-btn" onclick="checkAnswer(${index})" id="checkBtn" disabled>提交答案</button>
+                    <button class="submit-btn" onclick="nextQuestion()" id="nextBtn" style="display:none;">下一题</button>
+                    <button class="submit-btn" onclick="showExplanation(${index})" id="explainBtn">查看解析</button>
+                </div>
+                <div id="result" class="result"></div>
+                <div id="explanation" class="result"></div>
+            `;
+        }
+        
+        // 选择选项
+        function selectOption(element, optionIndex) {
+            // 移除之前的选择
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 添加选中样式
+            element.classList.add('selected');
+            
+            // 启用提交按钮
+            document.getElementById('checkBtn').disabled = false;
+        }
+        
+        // 检查答案
+        function checkAnswer(index) {
+            const selectedOption = document.querySelector('.option.selected input[name="quiz-option"]');
+            
+            if (!selectedOption) {
+                alert('请选择一个答案');
+                return;
+            }
+            
+            const selectedValue = parseInt(selectedOption.value);
+            const questionData = quizQuestions[index];
+            const isCorrect = selectedValue === questionData.answer;
+            
+            const resultDiv = document.getElementById('result');
+            
+            if (isCorrect) {
+                resultDiv.className = 'result correct';
+                resultDiv.textContent = '回答正确！';
+            } else {
+                resultDiv.className = 'result incorrect';
+                resultDiv.textContent = '回答错误！正确答案是：' + String.fromCharCode(65 + questionData.answer) + '. ' + questionData.options[questionData.answer];
+            }
+            
+            resultDiv.style.display = 'block';
+            
+            // 隐藏提交按钮，显示下一题按钮
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+        
+        // 显示解析
+        function showExplanation(index) {
+            const questionData = quizQuestions[index];
+            const explanationDiv = document.getElementById('explanation');
+            
+            explanationDiv.className = 'result correct';
+            explanationDiv.innerHTML = '<strong>解析：</strong>' + questionData.explanation;
+            explanationDiv.style.display = 'block';
+        }
+        
+        // 下一题
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= quizQuestions.length) {
+                // 如果是最后一题，回到第一题
+                currentQuestionIndex = 0;
+            }
+            
+            showQuestion(currentQuestionIndex);
+        }
+        
+        // 添加全局函数，供HTML中的onclick调用
+        window.selectOption = selectOption;
+        window.checkAnswer = checkAnswer;
+        window.nextQuestion = nextQuestion;
+        window.showExplanation = showExplanation;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电磁感应原理交互演示</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .module {
+            flex: 1 1 600px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .module-title {
+            color: #2c3e50;
+            border-bottom: 3px solid;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .module-1 .module-title {
+            color: #3498db;
+            border-color: #3498db;
+        }
+        
+        .module-2 .module-title {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        
+        .module-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .simulation-area {
+            height: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            background-color: #f9f9f9;
+        }
+        
+        .circuit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 120px;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        
+        .circuit-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .magnetic-field {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .magnetic-field.out {
+            color: #3498db;
+        }
+        
+        .magnetic-field.in {
+            color: #e74c3c;
+        }
+        
+        .current-arrow {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+            z-index: 20;
+        }
+        
+        .current-label {
+            position: absolute;
+            background-color: rgba(39, 174, 96, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #27ae60;
+            z-index: 20;
+        }
+        
+        .current-direction-text {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: #27ae60;
+            background-color: rgba(39, 174, 96, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            z-index: 20;
+        }
+        
+        .control-panel {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .module-1 .control-panel {
+            border-left-color: #3498db;
+        }
+        
+        .module-2 .control-panel {
+            border-left-color: #e74c3c;
+        }
+        
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .module-1 .slider::-webkit-slider-thumb {
+            background: #3498db;
+        }
+        
+        .module-2 .slider::-webkit-slider-thumb {
+            background: #e74c3c;
+        }
+        
+        .info-box {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border-left: 4px solid #3498db;
+        }
+        
+        .module-2 .info-box {
+            background-color: #fff5f5;
+            border-left-color: #e74c3c;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-test {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .btn-test:hover {
+            background-color: #8e44ad;
+        }
+        
+        .btn-reset {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .symbol {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .out-symbol {
+            color: #3498db;
+        }
+        
+        .in-symbol {
+            color: #e74c3c;
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .question:last-child {
+            border-bottom: none;
+        }
+        
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .option:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .option.selected {
+            border-color: #3498db;
+            background-color: #e3f2fd;
+        }
+        
+        .option.correct {
+            border-color: #2ecc71;
+            background-color: #d5f4e6;
+        }
+        
+        .option.incorrect {
+            border-color: #e74c3c;
+            background-color: #fadbd8;
+        }
+        
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .explanation.show {
+            display: block;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-submit {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background-color: #219653;
+        }
+        
+        .result-summary {
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #e8f4fc;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .result-summary.show {
+            display: block;
+        }
+        
+        .score {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .current-direction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: bold;
+            color: #e74c3c;
+            z-index: 15;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .module {
+                flex: 1 1 auto;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .legend {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- ===== 导航栏开始 ===== -->
+<div id="top-nav" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: linear-gradient(135deg, #1a237e, #283593);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+">
+    <button onclick="location.href='../index.html'" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">🏠 主页</button>
+
+    <button onclick="history.back()" style="
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+    " onmouseover="this.style.background='rgba(255,255,255,0.4)'" 
+      onmouseout="this.style.background='rgba(255,255,255,0.2)'">⬅ 返回上级</button>
+</div>
+<div style="height: 60px;"></div>
+<!-- ===== 导航栏结束 ===== -->
+
+    <header>
+        <h1>电磁感应原理交互演示</h1>
+        <p class="subtitle">变化的磁场产生电场，变化的电场产生磁场 - 通过交互模拟深入理解麦克斯韦方程组的核心原理</p>
+    </header>
+    
+    <div class="container">
+        <!-- 模块1：变化的磁场产生电场 -->
+        <div class="module module-1">
+            <h2 class="module-title">
+                <span>模块一：变化的磁场产生电场</span>
+            </h2>
+            
+            <div class="module-content">
+                <div class="simulation-area" id="simulation1">
+                    <!-- 磁场符号会通过JS动态生成 -->
+                    <!-- 电路框 -->
+                    <div class="circuit">
+                        <div class="circuit-label">闭合电路</div>
+                    </div>
+                    <!-- 电流箭头和标签会通过JS动态生成 -->
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="symbol out-symbol">×</span>
+                        <span>垂直向里的磁场</span>
+                    </div>
+                    <div class="legend-item">
+                        <span id="currentDirText1">无电流</span>
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>磁场强度 (B)</span>
+                            <span id="magneticValue1">2.0 T</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="20" class="slider" id="magneticSlider1">
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>原理说明：</strong> 根据法拉第电磁感应定律，当穿过闭合电路的磁通量发生变化时，电路中会产生感应电动势，从而形成感应电流。移动滑块改变磁场强度，观察电路中产生的电流方向（根据楞次定律：感应电流的方向总是阻碍引起它的磁通量变化）。
+                        <p><strong>操作说明：</strong> 向右移动滑块增大磁场（磁场增强），向左移动滑块减小磁场（磁场减弱）。观察电流箭头方向的变化。</p>
+                        <p><strong>电流方向规则：</strong> 
+                        <ul>
+                            <li>磁场增强 → 感应电流为<strong>逆时针方向</strong>（产生相反的磁场阻碍增强）</li>
+                            <li>磁场减弱 → 感应电流为<strong>顺时针方向</strong>（产生相同的磁场阻碍减弱）</li>
+                        </ul>
+                        </p>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button class="btn btn-test" id="testBtn1">学习检测 (4道题)</button>
+                        <button class="btn btn-reset" id="resetBtn1">重置模拟</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 模块2：变化的电场产生磁场 -->
+        <div class="module module-2">
+            <h2 class="module-title">
+                <span>模块二：变化的电场产生磁场</span>
+            </h2>
+            
+            <div class="module-content">
+                <div class="simulation-area" id="simulation2">
+                    <!-- 电路框 -->
+                    <div class="circuit">
+                        <div class="circuit-label">闭合电路</div>
+                    </div>
+                    <!-- 电流方向指示 -->
+                    <div class="current-direction" id="currentDirection2"></div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <span>顺时针电流 → 向里磁场 (×)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>逆时针电流 → 向外磁场 (·)</span>
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>电路电流方向与大小</span>
+                            <span id="currentValue2">无电流</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="50" class="slider" id="currentSlider2">
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong>原理说明：</strong> 根据麦克斯韦方程组中的安培定律（含位移电流项），变化的电场会产生磁场。移动滑块改变电路中的电流（即变化的电场），观察产生的磁场方向。电流顺时针时产生向里的磁场，逆时针时产生向外的磁场。
+                        <p><strong>操作说明：</strong> 滑块在中间时无电流。向右移动滑块产生顺时针电流，向左移动滑块产生逆时针电流。移动幅度越大，电流越大，磁场越强。</p>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button class="btn btn-test" id="testBtn2">学习检测 (5道题)</button>
+                        <button class="btn btn-reset" id="resetBtn2">重置模拟</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模块1的测试弹窗 -->
+    <div class="modal" id="testModal1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">模块一：变化的磁场产生电场 - 学习检测</div>
+                <button class="close-modal" id="closeModal1">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="result-summary" id="resultSummary1">
+                    <div class="score" id="score1"></div>
+                    <div id="resultDetails1"></div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">1. 法拉第电磁感应定律表明，感应电动势的大小与什么成正比？</div>
+                    <div class="options">
+                        <div class="option" data-correct="true">A. 磁通量的变化率</div>
+                        <div class="option">B. 磁通量的大小</div>
+                        <div class="option">C. 磁场强度的大小</div>
+                        <div class="option">D. 电路电阻的大小</div>
+                    </div>
+                    <div class="explanation">正确答案是 A。法拉第电磁感应定律指出：感应电动势的大小与穿过电路的磁通量的变化率成正比，而不是与磁通量本身的大小成正比。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">2. 当磁铁快速插入线圈时，线圈中产生的感应电流方向如何？</div>
+                    <div class="options">
+                        <div class="option">A. 与磁铁运动方向相同</div>
+                        <div class="option" data-correct="true">B. 产生的磁场阻碍磁铁插入</div>
+                        <div class="option">C. 产生的磁场增强磁铁插入</div>
+                        <div class="option">D. 与电源电流方向相同</div>
+                    </div>
+                    <div class="explanation">正确答案是 B。根据楞次定律，感应电流的方向总是使它产生的磁场阻碍引起感应电流的磁通量变化。当磁铁插入时，感应电流产生的磁场会阻碍磁铁的插入。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">3. 下列哪种情况不会产生感应电流？</div>
+                    <div class="options">
+                        <div class="option">A. 闭合电路在均匀磁场中旋转</div>
+                        <div class="option">B. 闭合电路在均匀磁场中平动</div>
+                        <div class="option" data-correct="true">C. 闭合电路在均匀磁场中静止</div>
+                        <div class="option">D. 磁场强度随时间变化</div>
+                    </div>
+                    <div class="explanation">正确答案是 C。当闭合电路在均匀磁场中静止时，穿过电路的磁通量不发生变化，因此不会产生感应电流。其他情况都会导致磁通量变化。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">4. 变压器的工作原理基于什么电磁感应原理？</div>
+                    <div class="options">
+                        <div class="option">A. 动生电动势</div>
+                        <div class="option">B. 自感现象</div>
+                        <div class="option" data-correct="true">C. 互感现象</div>
+                        <div class="option">D. 涡流效应</div>
+                    </div>
+                    <div class="explanation">正确答案是 C。变压器是基于互感现象工作的：初级线圈中的变化电流产生变化磁场，这个变化磁场在次级线圈中感应出电动势。</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="progress1">进度: 0/4</div>
+                <button class="btn btn-submit" id="submitBtn1">提交答案</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模块2的测试弹窗 -->
+    <div class="modal" id="testModal2">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">模块二：变化的电场产生磁场 - 学习检测</div>
+                <button class="close-modal" id="closeModal2">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="result-summary" id="resultSummary2">
+                    <div class="score" id="score2"></div>
+                    <div id="resultDetails2"></div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">1. 麦克斯韦方程组中，哪一项描述了变化的电场产生磁场？</div>
+                    <div class="options">
+                        <div class="option">A. 高斯电场定律</div>
+                        <div class="option">B. 高斯磁场定律</div>
+                        <div class="option" data-correct="true">C. 安培-麦克斯韦定律</div>
+                        <div class="option">D. 法拉第电磁感应定律</div>
+                    </div>
+                    <div class="explanation">正确答案是 C。安培-麦克斯韦定律（修正的安培定律）包含了位移电流项，表明变化的电场可以产生磁场。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">2. 位移电流的本质是什么？</div>
+                    <div class="options">
+                        <div class="option">A. 电荷的定向移动</div>
+                        <div class="option">B. 电子的漂移运动</div>
+                        <div class="option" data-correct="true">C. 变化的电场</div>
+                        <div class="option">D. 磁场的空间变化</div>
+                    </div>
+                    <div class="explanation">正确答案是 C。位移电流不是真正的电荷运动，而是变化的电场，但它在产生磁场方面与传导电流等效。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">3. 关于电磁波，下列哪个说法是正确的？</div>
+                    <div class="options">
+                        <div class="option">A. 电磁波可以在真空中传播</div>
+                        <div class="option">B. 电磁波是横波</div>
+                        <div class="option">C. 电场和磁场相互垂直</div>
+                        <div class="option" data-correct="true">D. 以上都正确</div>
+                    </div>
+                    <div class="explanation">正确答案是 D。电磁波可以在真空中传播，是横波，且电场和磁场方向相互垂直，并都垂直于传播方向。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">4. 根据右手螺旋定则，顺时针电流产生的磁场方向如何？</div>
+                    <div class="options">
+                        <div class="option">A. 垂直向外</div>
+                        <div class="option" data-correct="true">B. 垂直向里</div>
+                        <div class="option">C. 与电流同向</div>
+                        <div class="option">D. 与电流反向</div>
+                    </div>
+                    <div class="explanation">正确答案是 B。根据右手螺旋定则：四指弯曲方向为电流方向，拇指指向为磁场方向。对于顺时针电流，拇指指向垂直向里。</div>
+                </div>
+                
+                <div class="question">
+                    <div class="question-text">5. 麦克斯韦对电磁理论的主要贡献是什么？</div>
+                    <div class="options">
+                        <div class="option">A. 发现电磁感应现象</div>
+                        <div class="option">B. 提出位移电流概念</div>
+                        <div class="option">C. 预言电磁波存在</div>
+                        <div class="option" data-correct="true">D. 以上都是</div>
+                    </div>
+                    <div class="explanation">正确答案是 D。麦克斯韦的主要贡献包括：提出位移电流概念，建立完整的电磁场方程组，并预言电磁波的存在。</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="progress2">进度: 0/5</div>
+                <button class="btn btn-submit" id="submitBtn2">提交答案</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>电磁感应原理交互演示 | 设计用于教学演示 | 基于麦克斯韦方程组</p>
+        <p>提示：使用滑块调节参数，观察电磁感应现象，然后通过测试巩固所学知识</p>
+    </div>
+
+    <script>
+        // 模块1：变化的磁场产生电场
+        const magneticSlider1 = document.getElementById('magneticSlider1');
+        const magneticValue1 = document.getElementById('magneticValue1');
+        const simulation1 = document.getElementById('simulation1');
+        const resetBtn1 = document.getElementById('resetBtn1');
+        const testBtn1 = document.getElementById('testBtn1');
+        const testModal1 = document.getElementById('testModal1');
+        const closeModal1 = document.getElementById('closeModal1');
+        const submitBtn1 = document.getElementById('submitBtn1');
+        const resultSummary1 = document.getElementById('resultSummary1');
+        const score1 = document.getElementById('score1');
+        const resultDetails1 = document.getElementById('resultDetails1');
+        const progress1 = document.getElementById('progress1');
+        const currentDirText1 = document.getElementById('currentDirText1');
+        
+        let magneticFieldSymbols1 = [];
+        let currentArrow1 = null;
+        let currentLabel1 = null;
+        let currentDirectionText1 = null;
+        let lastMagneticValue1 = 20; // 初始值为20（2.0T）
+        let isMagneticIncreasing = false;
+        let previousMagneticValue = 20; // 跟踪上一次的值来判断变化
+        
+        // 初始化均匀分布的磁场符号
+        function initMagneticField1() {
+            magneticFieldSymbols1 = [];
+            // 清除现有符号
+            document.querySelectorAll('#simulation1 .magnetic-field').forEach(el => el.remove());
+            
+            // 创建均匀分布的磁场符号（×表示向里的磁场）
+            // 定义网格：8行×12列 = 96个符号
+            const rows = 8;
+            const cols = 12;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const symbol = document.createElement('div');
+                    symbol.className = 'magnetic-field out';
+                    symbol.textContent = '×';
+                    
+                    // 计算均匀分布的位置
+                    const x = (col + 0.5) * (100 / cols); // 居中在每个网格单元
+                    const y = (row + 0.5) * (100 / rows);
+                    
+                    symbol.style.left = `${x}%`;
+                    symbol.style.top = `${y}%`;
+                    
+                    // 固定大小
+                    symbol.style.fontSize = `18px`;
+                    
+                    // 初始透明度（对应初始值20）
+                    const initialOpacity = 0.3 + (20/100)*0.7;
+                    symbol.style.opacity = initialOpacity;
+                    
+                    simulation1.appendChild(symbol);
+                    magneticFieldSymbols1.push({
+                        element: symbol,
+                        x: x,
+                        y: y
+                    });
+                }
+            }
+        }
+        
+        // 更新磁场显示
+        function updateMagneticField1(value) {
+            const normalizedValue = value / 100;
+            
+            // 判断磁场是增大还是减小
+            isMagneticIncreasing = value > previousMagneticValue;
+            previousMagneticValue = value; // 更新previous值
+            
+            // 更新所有磁场符号的强度（透明度）
+            magneticFieldSymbols1.forEach(symbol => {
+                symbol.element.style.opacity = 0.3 + normalizedValue * 0.7;
+            });
+            
+            // 更新磁场值显示
+            magneticValue1.textContent = `${(value / 10).toFixed(1)} T`;
+            
+            // 更新或创建电流指示器
+            updateCurrentIndicator1(isMagneticIncreasing);
+            
+            // 更新lastMagneticValue1，用于下一次比较
+            lastMagneticValue1 = value;
+        }
+        
+        // 更新电流指示器
+        function updateCurrentIndicator1(isIncreasing) {
+            // 移除现有的箭头、标签和方向文本
+            if (currentArrow1) {
+                currentArrow1.remove();
+                currentArrow1 = null;
+            }
+            if (currentLabel1) {
+                currentLabel1.remove();
+                currentLabel1 = null;
+            }
+            if (currentDirectionText1) {
+                currentDirectionText1.remove();
+                currentDirectionText1 = null;
+            }
+            
+            let arrowDirection, currentDirection, directionText;
+            
+            if (isIncreasing) {
+                // 磁场增强：向下箭头，电流为逆时针
+                arrowDirection = '↓';
+                currentDirection = '逆时针';
+                directionText = '磁场增强 → 电流逆时针';
+            } else {
+                // 磁场减弱：向上箭头，电流为顺时针
+                arrowDirection = '↑';
+                currentDirection = '顺时针';
+                directionText = '磁场减弱 → 电流顺时针';
+            }
+            
+            // 创建箭头
+            currentArrow1 = document.createElement('div');
+            currentArrow1.className = 'current-arrow';
+            currentArrow1.textContent = arrowDirection;
+            currentArrow1.style.left = '35%';
+            currentArrow1.style.top = isIncreasing ? '45%' : '50%';
+            
+            simulation1.appendChild(currentArrow1);
+            
+            // 创建标签
+            currentLabel1 = document.createElement('div');
+            currentLabel1.className = 'current-label';
+            currentLabel1.textContent = '感应电流';
+            currentLabel1.style.left = '32%';
+            currentLabel1.style.top = isIncreasing ? '55%' : '60%';
+            
+            simulation1.appendChild(currentLabel1);
+            
+            // 创建方向文本（显示在电路内部）
+            currentDirectionText1 = document.createElement('div');
+            currentDirectionText1.className = 'current-direction-text';
+            currentDirectionText1.textContent = currentDirection;
+            currentDirectionText1.style.left = '48%';
+            currentDirectionText1.style.top = '50%';
+            
+            simulation1.appendChild(currentDirectionText1);
+            
+            // 更新下方的文本
+            currentDirText1.textContent = directionText;
+            currentDirText1.style.color = '#27ae60';
+            currentDirText1.style.fontWeight = 'bold';
+        }
+        
+        // 重置模块1
+        function resetModule1() {
+            magneticSlider1.value = 20;
+            previousMagneticValue = 20;
+            lastMagneticValue1 = 20;
+            updateMagneticField1(20);
+            
+            // 清除电流指示
+            if (currentArrow1) {
+                currentArrow1.remove();
+                currentArrow1 = null;
+            }
+            if (currentLabel1) {
+                currentLabel1.remove();
+                currentLabel1 = null;
+            }
+            if (currentDirectionText1) {
+                currentDirectionText1.remove();
+                currentDirectionText1 = null;
+            }
+            
+            // 重置文本
+            currentDirText1.textContent = '无电流';
+            currentDirText1.style.color = '';
+            currentDirText1.style.fontWeight = '';
+        }
+        
+        // 模块1滑块事件
+        magneticSlider1.addEventListener('input', function() {
+            updateMagneticField1(this.value);
+        });
+        
+        // 初始化时显示初始电流（无变化状态）
+        window.addEventListener('DOMContentLoaded', function() {
+            // 先初始化磁场
+            initMagneticField1();
+            
+            // 初始化模块2
+            initMagneticField2();
+            resetModule2();
+            
+            // 设置模块1的初始状态
+            updateMagneticField1(20);
+            
+            // 初始状态显示"无电流"
+            currentDirText1.textContent = '无电流';
+            
+            // 点击弹窗外部关闭弹窗
+            window.addEventListener('click', function(event) {
+                if (event.target === testModal1) {
+                    testModal1.style.display = 'none';
+                }
+                if (event.target === testModal2) {
+                    testModal2.style.display = 'none';
+                }
+            });
+        });
+        
+        resetBtn1.addEventListener('click', resetModule1);
+        
+        // 模块1测试弹窗
+        testBtn1.addEventListener('click', function() {
+            testModal1.style.display = 'flex';
+            resetTest1();
+        });
+        
+        closeModal1.addEventListener('click', function() {
+            testModal1.style.display = 'none';
+        });
+        
+        // 模块1测试逻辑
+        let selectedAnswers1 = new Array(4).fill(null);
+        
+        function resetTest1() {
+            // 重置选择
+            selectedAnswers1 = new Array(4).fill(null);
+            
+            // 重置选项样式
+            document.querySelectorAll('#testModal1 .option').forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // 隐藏解析
+            document.querySelectorAll('#testModal1 .explanation').forEach(exp => {
+                exp.classList.remove('show');
+            });
+            
+            // 隐藏结果
+            resultSummary1.classList.remove('show');
+            
+            // 更新进度
+            updateProgress1();
+        }
+        
+        function updateProgress1() {
+            const answered = selectedAnswers1.filter(answer => answer !== null).length;
+            progress1.textContent = `进度: ${answered}/4`;
+        }
+        
+        // 为模块1选项添加点击事件
+        document.querySelectorAll('#testModal1 .option').forEach((option, index) => {
+            option.addEventListener('click', function() {
+                const questionIndex = Math.floor(index / 4);
+                selectedAnswers1[questionIndex] = this.textContent.charAt(0);
+                
+                // 移除同一问题的其他选项的选择状态
+                const questionOptions = document.querySelectorAll(`#testModal1 .question:nth-child(${questionIndex + 2}) .option`);
+                questionOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // 添加当前选项的选择状态
+                this.classList.add('selected');
+                
+                updateProgress1();
+            });
+        });
+        
+        // 提交模块1测试
+        submitBtn1.addEventListener('click', function() {
+            let correctCount = 0;
+            const totalQuestions = 4;
+            
+            // 检查每个问题的答案
+            for (let i = 0; i < totalQuestions; i++) {
+                const questionElement = document.querySelector(`#testModal1 .question:nth-child(${i + 2})`);
+                const options = questionElement.querySelectorAll('.option');
+                const correctOption = questionElement.querySelector('.option[data-correct="true"]');
+                const userAnswer = selectedAnswers1[i];
+                
+                // 显示所有正确答案
+                options.forEach(option => {
+                    if (option.hasAttribute('data-correct')) {
+                        option.classList.add('correct');
+                    }
+                });
+                
+                // 标记用户答案
+                if (userAnswer) {
+                    const userOption = Array.from(options).find(opt => opt.textContent.charAt(0) === userAnswer);
+                    if (userOption) {
+                        if (userOption.hasAttribute('data-correct')) {
+                            correctCount++;
+                        } else {
+                            userOption.classList.add('incorrect');
+                        }
+                    }
+                }
+                
+                // 显示解析
+                const explanation = questionElement.querySelector('.explanation');
+                explanation.classList.add('show');
+            }
+            
+            // 显示结果
+            const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
+            score1.textContent = `得分: ${correctCount}/${totalQuestions} (${scorePercentage}%)`;
+            
+            let performanceText = '';
+            if (scorePercentage >= 80) {
+                performanceText = '优秀！你对变化的磁场产生电场的原理理解得很好。';
+            } else if (scorePercentage >= 60) {
+                performanceText = '良好！你已经掌握了主要概念，但还需要巩固一些细节。';
+            } else {
+                performanceText = '需要加强学习。建议回顾模块一的原理说明和模拟演示。';
+            }
+            
+            resultDetails1.innerHTML = `
+                <p>${performanceText}</p>
+                <p>关键知识点回顾：</p>
+                <ul>
+                    <li>法拉第电磁感应定律：感应电动势与磁通量变化率成正比</li>
+                    <li>楞次定律：感应电流的方向总是阻碍引起它的磁通量变化</li>
+                    <li>磁场增强 → 感应电流为逆时针方向（产生相反的磁场阻碍增强）</li>
+                    <li>磁场减弱 → 感应电流为顺时针方向（产生相同的磁场阻碍减弱）</li>
+                </ul>
+            `;
+            
+            resultSummary1.classList.add('show');
+        });
+        
+        // 模块2：变化的电场产生磁场
+        const currentSlider2 = document.getElementById('currentSlider2');
+        const currentValue2 = document.getElementById('currentValue2');
+        const simulation2 = document.getElementById('simulation2');
+        const resetBtn2 = document.getElementById('resetBtn2');
+        const testBtn2 = document.getElementById('testBtn2');
+        const testModal2 = document.getElementById('testModal2');
+        const closeModal2 = document.getElementById('closeModal2');
+        const submitBtn2 = document.getElementById('submitBtn2');
+        const resultSummary2 = document.getElementById('resultSummary2');
+        const score2 = document.getElementById('score2');
+        const resultDetails2 = document.getElementById('resultDetails2');
+        const progress2 = document.getElementById('progress2');
+        
+        let magneticFieldSymbols2 = [];
+        let currentDirection = 0; // 0: 无电流, 1: 顺时针, -1: 逆时针
+        let lastSliderValue = 50; // 滑块中间位置
+        
+        // 初始化均匀分布的磁场符号（预留，将在有电流时创建）
+        function initMagneticField2() {
+            magneticFieldSymbols2 = [];
+            // 清除现有符号
+            document.querySelectorAll('#simulation2 .magnetic-field').forEach(el => el.remove());
+        }
+        
+        // 更新电流显示
+        function updateCurrent2(sliderValue) {
+            // 判断电流方向
+            let direction = 0;
+            let currentStrength = 0;
+            
+            if (sliderValue > 50) {
+                // 顺时针电流
+                direction = 1;
+                currentStrength = (sliderValue - 50) / 50;
+                currentValue2.textContent = `顺时针 ${currentStrength.toFixed(1)} A`;
+            } else if (sliderValue < 50) {
+                // 逆时针电流
+                direction = -1;
+                currentStrength = (50 - sliderValue) / 50;
+                currentValue2.textContent = `逆时针 ${currentStrength.toFixed(1)} A`;
+            } else {
+                // 无电流
+                direction = 0;
+                currentStrength = 0;
+                currentValue2.textContent = `无电流`;
+            }
+            
+            currentDirection = direction;
+            
+            // 清除现有磁场符号
+            magneticFieldSymbols2.forEach(symbol => {
+                if (symbol.element.parentNode) {
+                    symbol.element.parentNode.removeChild(symbol.element);
+                }
+            });
+            magneticFieldSymbols2 = [];
+            
+            // 更新电流方向指示
+            const directionIndicator = document.getElementById('currentDirection2');
+            if (direction === 1) {
+                directionIndicator.innerHTML = '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:32px; color:#e74c3c;">↻</div>';
+            } else if (direction === -1) {
+                directionIndicator.innerHTML = '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:32px; color:#e74c3c;">↺</div>';
+            } else {
+                directionIndicator.innerHTML = '';
+            }
+            
+            // 如果有电流，创建均匀分布的磁场
+            if (direction !== 0) {
+                // 确定磁场方向：顺时针电流产生向里的磁场(×)，逆时针电流产生向外的磁场(·)
+                const isClockwise = direction === 1;
+                const symbolChar = isClockwise ? '×' : '·';
+                const symbolColor = isClockwise ? '#3498db' : '#e74c3c';
+                
+                // 创建均匀分布的磁场符号
+                // 定义网格：8行×12列 = 96个符号
+                const rows = 8;
+                const cols = 12;
+                
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const symbol = document.createElement('div');
+                        symbol.className = 'magnetic-field';
+                        symbol.textContent = symbolChar;
+                        symbol.style.color = symbolColor;
+                        
+                        // 计算均匀分布的位置
+                        const x = (col + 0.5) * (100 / cols);
+                        const y = (row + 0.5) * (100 / rows);
+                        
+                        symbol.style.left = `${x}%`;
+                        symbol.style.top = `${y}%`;
+                        
+                        // 大小和透明度根据电流强度变化
+                        symbol.style.fontSize = `${16 + currentStrength * 12}px`;
+                        symbol.style.opacity = `${0.3 + currentStrength * 0.7}`;
+                        
+                        simulation2.appendChild(symbol);
+                        magneticFieldSymbols2.push({
+                            element: symbol,
+                            x: x,
+                            y: y
+                        });
+                    }
+                }
+            }
+            
+            lastSliderValue = sliderValue;
+        }
+        
+        // 重置模块2
+        function resetModule2() {
+            currentSlider2.value = 50;
+            updateCurrent2(50);
+        }
+        
+        // 模块2滑块事件
+        currentSlider2.addEventListener('input', function() {
+            updateCurrent2(this.value);
+        });
+        
+        resetBtn2.addEventListener('click', resetModule2);
+        
+        // 模块2测试弹窗
+        testBtn2.addEventListener('click', function() {
+            testModal2.style.display = 'flex';
+            resetTest2();
+        });
+        
+        closeModal2.addEventListener('click', function() {
+            testModal2.style.display = 'none';
+        });
+        
+        // 模块2测试逻辑
+        let selectedAnswers2 = new Array(5).fill(null);
+        
+        function resetTest2() {
+            // 重置选择
+            selectedAnswers2 = new Array(5).fill(null);
+            
+            // 重置选项样式
+            document.querySelectorAll('#testModal2 .option').forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+            });
+            
+            // 隐藏解析
+            document.querySelectorAll('#testModal2 .explanation').forEach(exp => {
+                exp.classList.remove('show');
+            });
+            
+            // 隐藏结果
+            resultSummary2.classList.remove('show');
+            
+            // 更新进度
+            updateProgress2();
+        }
+        
+        function updateProgress2() {
+            const answered = selectedAnswers2.filter(answer => answer !== null).length;
+            progress2.textContent = `进度: ${answered}/5`;
+        }
+        
+        // 为模块2选项添加点击事件
+        document.querySelectorAll('#testModal2 .option').forEach((option, index) => {
+            option.addEventListener('click', function() {
+                const questionIndex = Math.floor(index / 4);
+                selectedAnswers2[questionIndex] = this.textContent.charAt(0);
+                
+                // 移除同一问题的其他选项的选择状态
+                const questionOptions = document.querySelectorAll(`#testModal2 .question:nth-child(${questionIndex + 2}) .option`);
+                questionOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // 添加当前选项的选择状态
+                this.classList.add('selected');
+                
+                updateProgress2();
+            });
+        });
+        
+        // 提交模块2测试
+        submitBtn2.addEventListener('click', function() {
+            let correctCount = 0;
+            const totalQuestions = 5;
+            
+            // 检查每个问题的答案
+            for (let i = 0; i < totalQuestions; i++) {
+                const questionElement = document.querySelector(`#testModal2 .question:nth-child(${i + 2})`);
+                const options = questionElement.querySelectorAll('.option');
+                const correctOption = questionElement.querySelector('.option[data-correct="true"]');
+                const userAnswer = selectedAnswers2[i];
+                
+                // 显示所有正确答案
+                options.forEach(option => {
+                    if (option.hasAttribute('data-correct')) {
+                        option.classList.add('correct');
+                    }
+                });
+                
+                // 标记用户答案
+                if (userAnswer) {
+                    const userOption = Array.from(options).find(opt => opt.textContent.charAt(0) === userAnswer);
+                    if (userOption) {
+                        if (userOption.hasAttribute('data-correct')) {
+                            correctCount++;
+                        } else {
+                            userOption.classList.add('incorrect');
+                        }
+                    }
+                }
+                
+                // 显示解析
+                const explanation = questionElement.querySelector('.explanation');
+                explanation.classList.add('show');
+            }
+            
+            // 显示结果
+            const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
+            score2.textContent = `得分: ${correctCount}/${totalQuestions} (${scorePercentage}%)`;
+            
+            let performanceText = '';
+            if (scorePercentage >= 80) {
+                performanceText = '优秀！你对变化的电场产生磁场的原理理解得很好。';
+            } else if (scorePercentage >= 60) {
+                performanceText = '良好！你已经掌握了主要概念，但还需要巩固一些细节。';
+            } else {
+                performanceText = '需要加强学习。建议回顾模块二的原理说明和模拟演示。';
+            }
+            
+            resultDetails2.innerHTML = `
+                <p>${performanceText}</p>
+                <p>关键知识点回顾：</p>
+                <ul>
+                    <li>安培-麦克斯韦定律：变化的电场产生磁场</li>
+                    <li>位移电流：本质是变化的电场，能产生磁场</li>
+                    <li>右手螺旋定则：用于判断电流产生磁场的方向</li>
+                    <li>电磁波：由相互垂直的变化电场和变化磁场组成</li>
+                </ul>
+            `;
+            
+            resultSummary2.classList.add('show');
+        });
+    </script>
+</body>
+</html>
