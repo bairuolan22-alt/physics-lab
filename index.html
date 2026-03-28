@@ -203,7 +203,7 @@ for(let i=0;i<60;i++){
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  var offset = 50;   // 改成当前访问量
+  var offset = 0;   // 改成当前访问量
 
   var timer = setInterval(function () {
     var el = document.getElementById("busuanzi_value_page_pv");
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("当前显示访问量:", el.innerText);
       clearInterval(timer);
     }
-  }, 800);
+  }, 600);
 });
 </script>
 <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
